@@ -34,7 +34,7 @@ export default function MapPage() {
       <Map center={center} level={level}
         style={{ width: "100%", height: "100%" }}>
         <MapMarker position={center} />
-        <SmallSignBoard level={level}/>
+        {/* <SmallSignBoard level={level}/> */}
       </Map>
       
     </div>

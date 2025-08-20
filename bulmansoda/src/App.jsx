@@ -9,7 +9,7 @@ export default function App() {
     <div className="w-screen h-[100dvh]">
       <MapPage/>
       <TrafficButton/>
-      {/* <InputSignBoard/> */}
+      <InputSignBoard/>
       {/* <LargeSignBoard/> */}
       
     </div>
