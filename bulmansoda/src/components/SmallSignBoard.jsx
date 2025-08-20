@@ -2,69 +2,6 @@ import whiteSign from '../assets/whitesign.svg';
 import redSign from '../assets/redsign.svg';
 import { useState } from 'react';
 
-// 삭제 버튼 컴포넌트
-function DeleteButton({ onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="
-        bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
-        text-white text-xs sm:text-sm md:text-base font-semibold
-        rounded px-3 py-1 focus:outline-none 
-      "
-    >
-      삭제
-    </button>
-  );
-}
-
-// 삭제 확인 모달 컴포넌트
-function DeleteConfirmModal({ onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 px-4">
-      <div
-        className="
-          bg-white rounded-lg shadow-lg p-6 
-          w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
-          text-center border-2 border-gray-950
-        "
-      >
-        <p className="text-gray-700 font-bold mb-4 text-sm sm:text-base md:text-lg">
-          정말 삭제하시겠습니까?
-        </p>
-
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={onConfirm}
-            className="
-              bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
-              text-white text-xs sm:text-sm md:text-base font-semibold
-              rounded px-3 sm:px-4 py-1.5 sm:py-2
-              focus:outline-none shadow-lg
-            "
-          >
-            삭제
-          </button>
-
-          <button
-            onClick={onCancel}
-            className="
-              bg-gray-100 hover:bg-gray-300 active:bg-gray-500
-              text-gray-950 text-xs sm:text-sm md:text-base font-semibold
-              rounded px-3 sm:px-4 py-1.5 sm:py-2
-              focus:outline-none shadow-md
-            "
-          >
-            취소
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 // 메인 컴포넌트
 export default function SmallSignBoard({ level }) {
   const [showDelete, setShowDelete] = useState(false); // 삭제 버튼 보이기 여부
@@ -143,5 +80,67 @@ export default function SmallSignBoard({ level }) {
         />
       )}
     </>
+  );
+}
+
+// 삭제 버튼 컴포넌트
+function DeleteButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
+        text-white text-xs sm:text-sm md:text-base font-semibold
+        rounded px-3 py-1 focus:outline-none 
+      "
+    >
+      삭제
+    </button>
+  );
+}
+
+// 삭제 확인 모달 컴포넌트
+function DeleteConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 px-4">
+      <div
+        className="
+          bg-white rounded-lg shadow-lg p-6 
+          w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl
+          text-center border-2 border-gray-950
+        "
+      >
+        <p className="text-gray-700 font-bold mb-4 text-sm sm:text-base md:text-lg">
+          정말 삭제하시겠습니까?
+        </p>
+
+        <div className="flex justify-center space-x-4">
+          <button
+            onClick={onConfirm}
+            className="
+              bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
+              text-white text-xs sm:text-sm md:text-base font-semibold
+              rounded px-3 sm:px-4 py-1.5 sm:py-2
+              focus:outline-none shadow-lg
+            "
+          >
+            삭제
+          </button>
+
+          <button
+            onClick={onCancel}
+            className="
+              bg-gray-100 hover:bg-gray-300 active:bg-gray-500
+              text-gray-950 text-xs sm:text-sm md:text-base font-semibold
+              rounded px-3 sm:px-4 py-1.5 sm:py-2
+              focus:outline-none shadow-md
+            "
+          >
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
