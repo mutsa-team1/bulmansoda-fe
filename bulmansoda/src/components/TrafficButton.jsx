@@ -12,7 +12,7 @@ export default function TrafficButton({ onClick }) {
         "
     >
       {/* 텍스트 */}
-      <span className="block w-full text-center text-gray-950 font-extrabold text-2xl mt-1.5 mb-1.5">
+      <span className="block w-full text-center text-gray-950 font-extrabold text-xl mt-1.5 mb-1.5">
         도로 상황 알리기
       </span>
 
