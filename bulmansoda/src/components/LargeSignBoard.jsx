@@ -1,7 +1,7 @@
 import largeSignBoard from "../assets/largesignboard.svg";
 
 // 팻말 - level4 이후 세부 내용 보여주는 팻말
-export default function LargeSignBoard() {
+export default function LargeSignBoard({ onClose }) {
   return (
     <div
       className="
@@ -27,8 +27,14 @@ export default function LargeSignBoard() {
         text-white text-lg sm:text-xl md:text-2xl font-extrabold 
           rounded-lg px-4 py-2 text-center "
         >
-          로터리 차간 사고 <br/>교통 정체 예상
+          로터리 차간 사고 <br />교통 정체 예상
         </span>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white text-xs sm:text-sm rounded-full px-2 py-1"
+        >
+          X
+        </button>
       </div>
     </div>
   );

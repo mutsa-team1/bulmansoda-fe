@@ -3,7 +3,7 @@ import redSign from '../assets/redsign.svg';
 import { useState } from 'react';
 
 // 메인 컴포넌트
-export default function SmallSignBoard({ level }) {
+export default function SmallSignBoard({ level, onOpenLarge }) {
   const [showDelete, setShowDelete] = useState(false); // 삭제 버튼 보이기 여부
   const [showConfirm, setShowConfirm] = useState(false); // 모달 보이기 여부
   const [isDeleted, setIsDeleted] = useState(false); // 실제 삭제 여부
@@ -12,6 +12,8 @@ export default function SmallSignBoard({ level }) {
   const handleClick = () => {
     if (isUnderFour) {
       setShowDelete(true);
+    } else {
+      if(onOpenLarge) onOpenLarge(); 
     }
   };
 
