@@ -1,6 +1,6 @@
 import largeSignBoard from "../assets/largesignboard.svg";
 
-// 팻말 - 불만 입력 창 
+// 팻말 - level4 이후 세부 내용 보여주는 팻말
 export default function LargeSignBoard() {
   return (
     <div
@@ -24,7 +24,7 @@ export default function LargeSignBoard() {
       <div className="absolute inset-0 flex items-center justify-center p-4 pb-14">
         <span
           className="
-           text-white text-lg sm:text-xl md:text-2xl font-extrabold 
+        text-white text-lg sm:text-xl md:text-2xl font-extrabold 
           rounded-lg px-4 py-2 text-center "
         >
           로터리 차간 사고 <br/>교통 정체 예상

@@ -2,8 +2,9 @@ import { useRef, useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import SearchBar from "../components/SearchBar";
 import TrafficButton from "../components/TrafficButton";
+import SmallSignBoard from "../components/SmallSignBoard";
 
-
+// level 추적 기능 구현 필요 
 
 export default function MapPage() {
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
@@ -33,6 +34,7 @@ export default function MapPage() {
       <Map center={center} level={level}
         style={{ width: "100%", height: "100%" }}>
         <MapMarker position={center} />
+        <SmallSignBoard level={level}/>
       </Map>
       
     </div>

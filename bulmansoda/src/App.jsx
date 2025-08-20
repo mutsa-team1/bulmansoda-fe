@@ -10,7 +10,8 @@ export default function App() {
       <MapPage/>
       <TrafficButton/>
       {/* <InputSignBoard/> */}
-      <LargeSignBoard/>
+      {/* <LargeSignBoard/> */}
+      
     </div>
   );
 }
