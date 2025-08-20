@@ -6,7 +6,7 @@ const SearchBar = forwardRef(function SearchBar({ onSearch }, ref) {
     <section
       className="absolute top-3 left-3 right-3 z-10 
                   flex items-center gap-2
-                bg-white rounded-2xl px-3 pl-3 py-2 shadow-lg"
+                bg-white rounded-2xl px-3 pl-3 py-2 shadow-2xl"
     >
 
       <input

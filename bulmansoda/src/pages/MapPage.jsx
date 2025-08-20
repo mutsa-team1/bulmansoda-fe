@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import SearchBar from "../components/SearchBar";
+import TrafficButton from "../components/TrafficButton";
 
 
 
@@ -27,11 +28,13 @@ export default function MapPage() {
     <div className="relative w-full h-[100dvh]">
       {/* 검색창 컴포넌트 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
+      
       {/* 카카오 지도 */}
       <Map center={center} level={level}
-      style={{ width: "100%", height: "100%" }}>
-      <MapMarker position={center} />
+        style={{ width: "100%", height: "100%" }}>
+        <MapMarker position={center} />
       </Map>
+      
     </div>
   );
 }
