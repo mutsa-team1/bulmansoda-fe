@@ -4,6 +4,7 @@ import SearchBar from "../components/SearchBar";
 import SmallSignBoard from "../components/SmallSignBoard";
 import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
+import usePinsStorage from "../hooks/usePinsStorage";
 // import useGeolocation from "../hooks/useGeolocation";
 
 // Individual 모드(레벨1~3) -> "default(하얀색, 삭제기능있음)", "input" , "adjust"
@@ -23,7 +24,7 @@ export default function MapPage() {
   const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
 
   // 여러 개 핀 상태관리 (Individual 전용)
-  const [pins, setPins] = useState([]); // [{id, lat, lng, text}]
+  const [pins, setPins] = usePinsStorage("traffic_pins_v1"); // [{id, lat, lng, text}]
   const [inputText, setInputText] = useState(""); // 팻말 텍스트
 
   const inputRef = useRef(null);
@@ -51,26 +52,6 @@ export default function MapPage() {
       setSubMode("default");
     }
   }, [viewMode]); // level 변화로 viewMode가 달라지면 정리
-
-  // !!!! 로컬 스토리지 load/save !!!! => 이 부분 DB 연결 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("traffic_pins_v1");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setPins(parsed);
-      }
-    } catch (e) {
-      console.warn("Failed to load pins from storage:", e);
-    }
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem("traffic_pins_v1", JSON.stringify(pins));
-    } catch (e) {
-      console.warn("Failed to save pins to storage:", e);
-    }
-  }, [pins]);
 
   // 장소 검색 기능 (간단 버전)
   const onSearch = () => {
