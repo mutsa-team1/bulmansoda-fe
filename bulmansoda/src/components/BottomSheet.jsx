@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react"
 
 /**
  * props
  * - open, onClose, snapPoints, initialSnap, showBackdrop, className
  * - snapTolerance?: number  // 스냅 흡착 허용 거리(px). 기본 24
  * - closeDragDelta?: number // 아래로 끌어 닫히는 최소 드래그(px). 기본 80
+ * - onHeightChange?: (h: number) => void // ✅ 현재 높이를 부모로 전달
  */
 export default function BottomSheet({
   open,
@@ -16,147 +17,153 @@ export default function BottomSheet({
   children,
   snapTolerance = 24,
   closeDragDelta = 80,
+  onHeightChange, // ✅ 추가
 }) {
-  const sheetRef = useRef(null);
-  const startYRef = useRef(0);
-  const startHRef = useRef(0);
-  const draggingRef = useRef(false);
+  const sheetRef = useRef(null)
+  const startYRef = useRef(0)
+  const startHRef = useRef(0)
+  const draggingRef = useRef(false)
 
-  const [snapPx, setSnapPx] = useState([]);
-  const [height, setHeight] = useState(0);
+  const [snapPx, setSnapPx] = useState([])
+  const [height, setHeight] = useState(0)
 
   const supportsPointer =
-    typeof window !== "undefined" && "onpointerdown" in window;
+    typeof window !== "undefined" && "onpointerdown" in window
 
   const getVh = () =>
     (window.visualViewport && window.visualViewport.height) ||
-    window.innerHeight;
+    window.innerHeight
 
   const toPx = useCallback((v) => {
-    if (typeof v === "number") return v;
-    const m = String(v).trim();
+    if (typeof v === "number") return v
+    const m = String(v).trim()
     if (m.endsWith("dvh") || m.endsWith("vh")) {
-      const ratio = parseFloat(m) / 100;
-      return Math.round(getVh() * ratio);
+      const ratio = parseFloat(m) / 100
+      return Math.round(getVh() * ratio)
     }
-    if (m.endsWith("px")) return parseFloat(m);
-    const n = parseFloat(m);
-    return isNaN(n) ? 300 : n;
-  }, []);
+    if (m.endsWith("px")) return parseFloat(m)
+    const n = parseFloat(m)
+    return isNaN(n) ? 300 : n
+  }, [])
 
-  const clampH = (h) => Math.max(60, Math.min(getVh(), h));
+  const clampH = (h) => Math.max(60, Math.min(getVh(), h))
 
   const recalcSnap = useCallback(() => {
-    const arr = snapPoints.map(toPx).sort((a, b) => a - b);
-    setSnapPx(arr);
-    const initIdx = Math.min(Math.max(0, initialSnap), arr.length - 1);
-    setHeight(arr[initIdx] || 300);
-  }, [snapPoints, initialSnap, toPx]);
+    const arr = snapPoints.map(toPx).sort((a, b) => a - b)
+    setSnapPx(arr)
+    const initIdx = Math.min(Math.max(0, initialSnap), arr.length - 1)
+    setHeight(arr[initIdx] || 300)
+  }, [snapPoints, initialSnap, toPx])
+
+  // ✅ 부모로 height 알려주기
+  useEffect(() => {
+    if (open && onHeightChange) {
+      onHeightChange(height)
+    }
+  }, [height, open, onHeightChange])
 
   useEffect(() => {
-    if (!open) return;
-    recalcSnap();
-    const onResize = () => recalcSnap();
-    window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
+    if (!open) return
+    recalcSnap()
+    const onResize = () => recalcSnap()
+    window.addEventListener("resize", onResize)
+    window.visualViewport?.addEventListener("resize", onResize)
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
-    };
-  }, [open, recalcSnap]);
+      window.removeEventListener("resize", onResize)
+      window.visualViewport?.removeEventListener("resize", onResize)
+    }
+  }, [open, recalcSnap])
 
   const addDragListeners = useCallback(() => {
     if (supportsPointer) {
-      window.addEventListener("pointermove", onDragMove, { passive: false });
-      window.addEventListener("pointerup", onDragEnd);
-      window.addEventListener("pointercancel", onDragEnd);
+      window.addEventListener("pointermove", onDragMove, { passive: false })
+      window.addEventListener("pointerup", onDragEnd)
+      window.addEventListener("pointercancel", onDragEnd)
     } else {
-      window.addEventListener("touchmove", onDragMove, { passive: false });
-      window.addEventListener("touchend", onDragEnd);
-      window.addEventListener("touchcancel", onDragEnd);
+      window.addEventListener("touchmove", onDragMove, { passive: false })
+      window.addEventListener("touchend", onDragEnd)
+      window.addEventListener("touchcancel", onDragEnd)
     }
-  }, [supportsPointer]);
+  }, [supportsPointer])
 
   const removeDragListeners = useCallback(() => {
     if (supportsPointer) {
-      window.removeEventListener("pointermove", onDragMove);
-      window.removeEventListener("pointerup", onDragEnd);
-      window.removeEventListener("pointercancel", onDragEnd);
+      window.removeEventListener("pointermove", onDragMove)
+      window.removeEventListener("pointerup", onDragEnd)
+      window.removeEventListener("pointercancel", onDragEnd)
     } else {
-      window.removeEventListener("touchmove", onDragMove);
-      window.removeEventListener("touchend", onDragEnd);
-      window.removeEventListener("touchcancel", onDragEnd);
+      window.removeEventListener("touchmove", onDragMove)
+      window.removeEventListener("touchend", onDragEnd)
+      window.removeEventListener("touchcancel", onDragEnd)
     }
-  }, [supportsPointer]);
+  }, [supportsPointer])
 
   const onDragStart = (e) => {
-    draggingRef.current = true;
+    draggingRef.current = true
     const y =
       ("clientY" in e && e.clientY) ||
       (e.touches && e.touches[0]?.clientY) ||
-      0;
-    startYRef.current = y;
-    startHRef.current = height;
-    document.documentElement.style.overscrollBehaviorY = "none";
-    document.body.style.overscrollBehaviorY = "none";
-    document.body.style.userSelect = "none";
-    addDragListeners();
-  };
+      0
+    startYRef.current = y
+    startHRef.current = height
+    document.documentElement.style.overscrollBehaviorY = "none"
+    document.body.style.overscrollBehaviorY = "none"
+    document.body.style.userSelect = "none"
+    addDragListeners()
+  }
 
   const onDragMove = (e) => {
-    if (!draggingRef.current) return;
+    if (!draggingRef.current) return
     const y =
       ("clientY" in e && e.clientY) ||
       (e.touches && e.touches[0]?.clientY) ||
-      0;
-    const dy = startYRef.current - y; // 위로 +, 아래로 -
-    const next = clampH(startHRef.current + dy);
-    setHeight(next);
-    e.preventDefault?.();
-  };
+      0
+    const dy = startYRef.current - y // 위로 +, 아래로 -
+    const next = clampH(startHRef.current + dy)
+    setHeight(next)
+    e.preventDefault?.()
+  }
 
   const onDragEnd = () => {
-    draggingRef.current = false;
-    document.body.style.userSelect = "";
-    document.documentElement.style.overscrollBehaviorY = "";
-    document.body.style.overscrollBehaviorY = "";
-    removeDragListeners();
+    draggingRef.current = false
+    document.body.style.userSelect = ""
+    document.documentElement.style.overscrollBehaviorY = ""
+    document.body.style.overscrollBehaviorY = ""
+    removeDragListeners()
 
-    // 아래로 끌어내린 거리(닫힘 판단)
-    const dragDelta = height - startHRef.current; // 아래로 당기면 음수
+    const dragDelta = height - startHRef.current // 아래로 당기면 음수
     if (dragDelta < -closeDragDelta) {
-      onClose?.();
-      return;
+      onClose?.()
+      return
     }
 
-    // 가장 가까운 스냅, 단 snapTolerance 이내일 때만 흡착
-    let bestIdx = -1;
-    let bestDist = Infinity;
+    let bestIdx = -1
+    let bestDist = Infinity
     snapPx.forEach((sp, i) => {
-      const d = Math.abs(sp - height);
+      const d = Math.abs(sp - height)
       if (d < bestDist) {
-        bestDist = d;
-        bestIdx = i;
+        bestDist = d
+        bestIdx = i
       }
-    });
+    })
     if (bestIdx >= 0 && bestDist <= snapTolerance) {
-      setHeight(snapPx[bestIdx]);
+      setHeight(snapPx[bestIdx])
     } else {
-      setHeight(clampH(height)); // 미세 위치 유지
+      setHeight(clampH(height)) // 미세 위치 유지
     }
-  };
+  }
 
   useEffect(() => {
     return () => {
-      draggingRef.current = false;
-      document.body.style.userSelect = "";
-      document.documentElement.style.overscrollBehaviorY = "";
-      document.body.style.overscrollBehaviorY = "";
-      removeDragListeners();
-    };
-  }, [removeDragListeners]);
+      draggingRef.current = false
+      document.body.style.userSelect = ""
+      document.documentElement.style.overscrollBehaviorY = ""
+      document.body.style.overscrollBehaviorY = ""
+      removeDragListeners()
+    }
+  }, [removeDragListeners])
 
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <div className="fixed inset-0 z-[60] pointer-events-none">
@@ -174,7 +181,7 @@ export default function BottomSheet({
           height,
           transition: draggingRef.current ? "none" : "height 220ms ease",
           paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
-          overscrollBehaviorY: "none", // 시트 자체 bounce 억제
+          overscrollBehaviorY: "none",
           willChange: "height",
         }}
       >
@@ -192,5 +199,5 @@ export default function BottomSheet({
         </div>
       </div>
     </div>
-  );
+  )
 }

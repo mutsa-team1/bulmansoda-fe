@@ -19,8 +19,8 @@ export default function LargeSignBoard({ title, count = 0, onClose }) {
   return (
     <div
       className="
-        absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-        z-20
+        absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2
+        z-[60]
         w-[250px] h-[185px] 
         sm:w-[300px] sm:h-[220px]
         md:w-[350px] md:h-[260px]

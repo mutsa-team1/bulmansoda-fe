@@ -1,6 +1,6 @@
 // CommunityThread.jsx
 import { useState } from "react";
-import { ThumbsUp, MessageCircle, Trash2, Send } from "lucide-react";
+import { ThumbsUp, Trash2, Send } from "lucide-react";
 
 // 샘플 데이터
 const initialComments = [
@@ -29,7 +29,6 @@ const initialComments = [
 
 export default function CommunityThread() {
   const [comments, setComments] = useState(initialComments);
-  const [replyTargetId, setReplyTargetId] = useState(null);
   const [newComment, setNewComment] = useState("");
   const currentUser = "피해자3";
 
@@ -44,10 +43,6 @@ export default function CommunityThread() {
   //   alert("신고가 접수되었습니다.");
   // };
 
-  const openReply = (id) => {
-    setReplyTargetId((cur) => (cur === id ? null : id));
-  };
-
   const addRootComment = () => {
     const text = newComment.trim();
     if (!text) return;
@@ -56,12 +51,14 @@ export default function CommunityThread() {
       {
         id: `c_${Date.now()}`,
         author: currentUser,
-        ts: new Date().toLocaleString("ko-KR", {
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        }).replace(",", ""),
+        ts: new Date()
+          .toLocaleString("ko-KR", {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(",", ""),
         text,
         likes: 0,
       },
@@ -69,32 +66,9 @@ export default function CommunityThread() {
     setNewComment("");
   };
 
-  const addReplyTo = (id, text) => {
-    // 데모: 답글도 루트에 추가 (실제론 parentId로 트리 구성)
-    setComments((prev) => [
-      ...prev,
-      {
-        id: `c_${Date.now()}`,
-        author: currentUser,
-        ts: new Date().toLocaleString("ko-KR", {
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        }).replace(",", ""),
-        text,
-        likes: 0,
-      },
-    ]);
-    setReplyTargetId(null);
-  };
-
   return (
-    <div className="relative mx-auto max-w-md min-h-[100dvh] bg-white">
-      {/* 상단 드래그 핸들 */}
-      {/* <div className="mx-auto mt-1 mb-2 h-1.5 w-12 rounded-full bg-gray-300" /> */}
-
-      <div className="px-3 pb-36 space-y-2">
+    <div className="relative mx-auto max-w-md bg-white">
+      <div className="pb-36 space-y-2">
         {comments.map((c) => (
           <CommentCard
             key={c.id}
@@ -103,11 +77,7 @@ export default function CommunityThread() {
             text={c.text}
             likes={c.likes}
             onLike={() => like(c.id)}
-            onReply={() => openReply(c.id)}
             // onReport={() => report(c.id)}
-            showReplyBox={replyTargetId === c.id}
-            currentUser={currentUser}
-            onSubmitReply={(txt) => addReplyTo(c.id, txt)}
           />
         ))}
       </div>
@@ -138,27 +108,7 @@ export default function CommunityThread() {
   );
 }
 
-function CommentCard({
-  author,
-  ts,
-  text,
-  likes,
-  onLike,
-  onReply,
-  onReport,
-  showReplyBox,
-  currentUser,
-  onSubmitReply,
-}) {
-  const [reply, setReply] = useState("");
-
-  const submitReply = () => {
-    const v = reply.trim();
-    if (!v) return;
-    onSubmitReply?.(v);
-    setReply("");
-  };
-
+function CommentCard({ author, ts, text, likes, onLike, onReport }) {
   return (
     <div className="rounded-xl border-2 border-[#E52E21] p-3 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
       {/* 헤더 */}
@@ -175,18 +125,12 @@ function CommentCard({
             <ThumbsUp size={14} className="opacity-70" />
           </div>
 
-          {/* 액션 버튼들 */}
+          {/* 액션 버튼들 (좋아요 / 신고) */}
           <button
             onClick={onLike}
             className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-[12px] text-gray-800 active:bg-gray-50"
           >
             <ThumbsUp size={14} />
-          </button>
-          <button
-            onClick={onReply}
-            className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-[12px] text-gray-800 active:bg-gray-50"
-          >
-            <MessageCircle size={14} />
           </button>
           <button
             onClick={onReport}
@@ -202,34 +146,6 @@ function CommentCard({
         <p className="mt-1 text-[13px] leading-relaxed text-gray-900">
           {text}
         </p>
-      )}
-
-      {/* 답글 입력 (토글) */}
-      {showReplyBox && (
-        <div className="mt-3 rounded-lg border border-[#E52E21] p-2">
-          <div className="mb-1 flex items-baseline gap-2">
-            <span className="text-sm font-extrabold text-gray-900">
-              {currentUser}
-            </span>
-            <span className="text-[11px] text-gray-500">지금</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              value={reply}
-              onChange={(e) => setReply(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitReply()}
-              placeholder="댓글을 입력하세요."
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
-            />
-            <button
-              onClick={submitReply}
-              className="grid place-items-center rounded-lg bg-gray-900 text-white px-3 py-2 active:opacity-90"
-              aria-label="답글 전송"
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );

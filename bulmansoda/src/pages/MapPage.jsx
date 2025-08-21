@@ -12,7 +12,10 @@ import groupDummy from "../data/groupDummy.json";
 import LargeSignBoard from "../components/LargeSignBoard";
 
 export default function MapPage() {
-  const [center, setCenter] = useState({ lat: 37.46810567643863, lng: 127.03924802821535 }); // 양재 aT 센터
+  const [center, setCenter] = useState({
+    lat: 37.46810567643863,
+    lng: 127.03924802821535,
+  }); // 양재 aT 센터
   const [level, setLevel] = useState(3);
 
   const viewMode = level < 4 ? "individual" : "group";
@@ -37,7 +40,7 @@ export default function MapPage() {
     if (viewMode === "individual" && subMode === "community") {
       setSubMode("default");
     }
-  }, [viewMode]); // level 변동에 따른 정리
+  }, [viewMode, subMode]);
 
   const onSearch = () => {
     const q = inputRef.current?.value?.trim();
@@ -52,11 +55,15 @@ export default function MapPage() {
     });
   };
 
-  // 최신 모드 참조용
+  // 최신 모드 참조용 (리스너에서 활용)
   const subModeRef = useRef(subMode);
   const viewModeRef = useRef(viewMode);
-  useEffect(() => { subModeRef.current = subMode; }, [subMode]);
-  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
+  useEffect(() => {
+    subModeRef.current = subMode;
+  }, [subMode]);
+  useEffect(() => {
+    viewModeRef.current = viewMode;
+  }, [viewMode]);
 
   // 지도 생성
   const handleMapCreate = (map) => {
@@ -69,7 +76,10 @@ export default function MapPage() {
 
     // adjust일 때만 중심 동기화
     window.kakao.maps.event.addListener(map, "center_changed", () => {
-      if (subModeRef.current === "adjust" && viewModeRef.current === "individual") {
+      if (
+        subModeRef.current === "adjust" &&
+        viewModeRef.current === "individual"
+      ) {
         const c = map.getCenter();
         setCenter({ lat: c.getLat(), lng: c.getLng() });
       }
@@ -84,8 +94,13 @@ export default function MapPage() {
 
   // adjust 확정 → 핀 추가
   const handleAdjustComplete = () => {
-    const id = (crypto?.randomUUID && crypto.randomUUID()) || `${Date.now()}_${Math.random()}`;
-    setPins((prev) => [...prev, { id, lat: center.lat, lng: center.lng, text: inputText }]);
+    const id =
+      (crypto?.randomUUID && crypto.randomUUID()) ||
+      `${Date.now()}_${Math.random()}`;
+    setPins((prev) => [
+      ...prev,
+      { id, lat: center.lat, lng: center.lng, text: inputText },
+    ]);
     setInputText("");
     setSubMode("default");
   };
@@ -98,7 +113,7 @@ export default function MapPage() {
   // Group: 커뮤니티 오픈(바텀시트 + LargeSignBoard)
   const openCommunity = (centerItem) => {
     setSelectedCenter(centerItem);
-    setSelectedBoard(centerItem); // ✅ LargeSignBoard도 함께 열기
+    setSelectedBoard(centerItem);
     setSubMode("community");
   };
 
@@ -116,7 +131,7 @@ export default function MapPage() {
       {/* 검색창 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
-      {/* 레벨/모드 배지 */}
+      {/* 상태 배지 */}
       <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
         <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
           레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
@@ -133,8 +148,9 @@ export default function MapPage() {
       >
         <MapMarker position={center} />
 
-        {/* Individual/default: 확정 핀 렌더 */}
-        {viewMode === "individual" && subMode === "default" &&
+        {/* Individual/default: 확정 핀 */}
+        {viewMode === "individual" &&
+          subMode === "default" &&
           pins.map((p) => (
             <CustomOverlayMap
               key={p.id}
@@ -150,11 +166,11 @@ export default function MapPage() {
                 onDelete={() => removePin(p.id)}
               />
             </CustomOverlayMap>
-          ))
-        }
+          ))}
 
-        {/* Group/default: 더미 데이터 렌더 */}
-        {viewMode === "group" && subMode === "default" &&
+        {/* Group/default: 더미 데이터 */}
+        {viewMode === "group" &&
+          subMode === "default" &&
           groupDummy.map((gc) => (
             <CustomOverlayMap
               key={gc.centerMarkerId}
@@ -170,17 +186,12 @@ export default function MapPage() {
                 onOpenLarge={() => openCommunity(gc)}
               />
             </CustomOverlayMap>
-          ))
-        }
+          ))}
 
         {/* Individual/adjust: 지도 중심 미리보기 */}
         {viewMode === "individual" && subMode === "adjust" && (
           <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
-            <SmallSignBoard
-              viewMode="individual"
-              subMode="adjust"
-              text={inputText}
-            />
+            <SmallSignBoard viewMode="individual" subMode="adjust" text={inputText} />
           </CustomOverlayMap>
         )}
       </Map>
@@ -213,14 +224,14 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* 신고 버튼: Individual/default 에서만 */}
+      {/* 신고 버튼 */}
       {viewMode === "individual" && subMode === "default" && (
         <TrafficButton onClick={() => setSubMode("input")} />
       )}
 
-      {/* community 모드일 때 LargeSignBoard + BottomSheet를 column으로 */}
+      {/* community 모드: LargeSignBoard + BottomSheet */}
       {subMode === "community" && (
-        <div className="flex flex-col w-full z-30">
+        <>
           {selectedBoard && (
             <LargeSignBoard
               title={selectedBoard.keywords.join(" ")}
@@ -235,7 +246,6 @@ export default function MapPage() {
             initialSnap={1}
             showBackdrop={false}
           >
-            {/* 선택된 센터 정보 */}
             {selectedCenter && (
               <div className="mb-3 space-y-2">
                 <div className="text-sm text-gray-500">
@@ -253,7 +263,7 @@ export default function MapPage() {
             )}
             <CommunityThread />
           </BottomSheet>
-        </div>
+        </>
       )}
     </div>
   );
