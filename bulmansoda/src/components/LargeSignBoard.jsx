@@ -1,13 +1,19 @@
 import { useState } from "react";
 import largeSignBoard from "../assets/largesignboard.svg";
-import angryIcon from '../assets/angry.png';
+import angryIcon from "../assets/angry.png";
 
-// 팻말 - level4 이후 세부 내용 보여주는 팻말
-export default function LargeSignBoard({ onClose }) {
-  const [likes, setLikes] = useState(0); // 공감 수
+/**
+ * LargeSignBoard
+ * props:
+ * - title: string (팻말에 표시할 텍스트)
+ * - count: number (공감/댓글 수 등)
+ * - onClose: () => void
+ */
+export default function LargeSignBoard({ title, count = 0, onClose }) {
+  const [likes, setLikes] = useState(count);
 
-  const addLike = () => { // 추후 사용자별 1회로 제한 기능 구현 
-    setLikes(likes + 1); // 누를 때마다 +1
+  const addLike = () => {
+    setLikes((prev) => prev + 1);
   };
 
   return (
@@ -29,23 +35,25 @@ export default function LargeSignBoard({ onClose }) {
       />
 
       {/* 텍스트 + 버튼 */}
-      <div className="absolute inset-0 flex flex-col justify-center p-5 pb-14">
-        {/* 텍스트 (좌측 정렬) */}
+      <div className="absolute inset-0 p-5 pb-14">
+        {/* 텍스트 */}
         <span
           className="
+            block
             text-white text-lg sm:text-xl md:text-2xl font-extrabold 
             text-left ml-3 mt-3
+            whitespace-pre-wrap break-words
           "
         >
-          로터리 차간 사고 <br />교통 정체 예상
+          {title}
         </span>
 
-        {/* 버튼 (텍스트 바로 아래, 우측 정렬) */}
-        <div className="flex justify-end mt-4">
+        {/* 버튼 (항상 우측 하단 고정) */}
+        <div className="absolute bottom-13 right-6">
           <button
             onClick={addLike}
             className="
-              flex items-center space-x-2 px-2.5 py-1.5 mb-1 mr-1 rounded-md text-sm font-semibold shadow-md
+              flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm font-semibold shadow-md
               bg-[#1E1E1E] text-white hover:bg-[#2c2c2c] active:bg-[#111111]
             "
           >
@@ -65,4 +73,3 @@ export default function LargeSignBoard({ onClose }) {
     </div>
   );
 }
-

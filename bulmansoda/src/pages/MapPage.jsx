@@ -9,6 +9,7 @@ import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
 
 import groupDummy from "../data/groupDummy.json";
+import LargeSignBoard from "../components/LargeSignBoard";
 
 export default function MapPage() {
   const [center, setCenter] = useState({ lat: 37.46810567643863, lng: 127.03924802821535 }); // 양재 aT 센터
@@ -23,6 +24,7 @@ export default function MapPage() {
 
   // Group 선택된 센터
   const [selectedCenter, setSelectedCenter] = useState(null);
+  const [selectedBoard, setSelectedBoard] = useState(null);
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
@@ -93,10 +95,17 @@ export default function MapPage() {
     setPins((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Group: 커뮤니티 오픈(바텀시트)
+  // Group: 커뮤니티 오픈(바텀시트 + LargeSignBoard)
   const openCommunity = (centerItem) => {
     setSelectedCenter(centerItem);
+    setSelectedBoard(centerItem); // ✅ LargeSignBoard도 함께 열기
     setSubMode("community");
+  };
+
+  const closeCommunity = () => {
+    setSelectedCenter(null);
+    setSelectedBoard(null);
+    setSubMode("default");
   };
 
   // 바텀시트 열림 여부는 subMode로 파생
@@ -209,33 +218,43 @@ export default function MapPage() {
         <TrafficButton onClick={() => setSubMode("input")} />
       )}
 
-      {/* 바텀시트: Group/community */}
-      <BottomSheet
-        open={sheetOpen}
-        onClose={() => setSubMode("default")}
-        snapPoints={[140, "45dvh", "85dvh"]}
-        initialSnap={1}
-        showBackdrop={false}
-      >
-        {/* 선택된 센터 정보 헤더 */}
-        {selectedCenter && (
-          <div className="mb-3 space-y-2">
-            <div className="text-sm text-gray-500">
-              centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
-              {selectedCenter.latitude.toFixed(5)}, {selectedCenter.longitude.toFixed(5)}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {selectedCenter.keywords.map((k, i) => (
-                <span key={i} className="rounded-full border px-2 py-0.5 text-xs">
-                  #{k}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        {/* 댓글/목록 UI */}
-        <CommunityThread />
-      </BottomSheet>
+      {/* community 모드일 때 LargeSignBoard + BottomSheet를 column으로 */}
+      {subMode === "community" && (
+        <div className="flex flex-col w-full z-30">
+          {selectedBoard && (
+            <LargeSignBoard
+              title={selectedBoard.keywords.join(" ")}
+              count={5}
+              onClose={closeCommunity}
+            />
+          )}
+          <BottomSheet
+            open={sheetOpen}
+            onClose={closeCommunity}
+            snapPoints={[140, "45dvh", "85dvh"]}
+            initialSnap={1}
+            showBackdrop={false}
+          >
+            {/* 선택된 센터 정보 */}
+            {selectedCenter && (
+              <div className="mb-3 space-y-2">
+                <div className="text-sm text-gray-500">
+                  centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
+                  {selectedCenter.latitude.toFixed(5)}, {selectedCenter.longitude.toFixed(5)}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCenter.keywords.map((k, i) => (
+                    <span key={i} className="rounded-full border px-2 py-0.5 text-xs">
+                      #{k}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <CommunityThread />
+          </BottomSheet>
+        </div>
+      )}
     </div>
   );
 }

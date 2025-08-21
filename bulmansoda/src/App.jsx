@@ -1,5 +1,6 @@
 
 import CommunityThread from "./components/CommunityThread";
+import LargeSignBoard from "./components/LargeSignBoard";
 import MapPage from "./pages/MapPage";
 
 export default function App() {
@@ -10,7 +11,7 @@ export default function App() {
       {/* <CommunityPage/> */}
       {/* <CommentsPanel/> */}
       {/* <CommunityThread/> */}
-
+      {/* <LargeSignBoard/> */}
 
     </div>
   );
