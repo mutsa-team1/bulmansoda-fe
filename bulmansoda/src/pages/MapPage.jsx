@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import SearchBar from "../components/SearchBar";
-import TrafficButton from "../components/TrafficButton";
 import SmallSignBoard from "../components/SmallSignBoard";
 import LargeSignBoard from "../components/LargeSignBoard";
 
@@ -12,6 +11,7 @@ export default function MapPage() {
   const [level, setLevel] = useState(4);
   const [showLarge, setShowLarge] = useState(false);
   const inputRef = useRef(null);
+  const mapRef = useRef(null); // 지도 객체 보관 
 
   const onSearch = () => {
     const q = inputRef.current?.value?.trim();
@@ -27,14 +27,26 @@ export default function MapPage() {
     });
   };
 
+  const handleMapCreate = (map) => {
+    mapRef.current = map;
+    setLevel(map.getLevel()); // 초기 레벨 동기화 
+    // 지도 이동/확대/축소 이벤트에 따라 레벨 업데이트 
+    window.kakao.maps.event.addListener(map, "zoom_changed", () => {
+      setLevel(map.getLevel());
+    });
+  };
+
   return (
     <div className="relative w-full h-[100dvh]">
       {/* 검색창 컴포넌트 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
       {/* 카카오 지도 */}
-      <Map center={center} level={level}
-        style={{ width: "100%", height: "100%" }}>
+      <Map
+        center={center} level={level}
+        style={{ width: "100%", height: "100%" }}
+        onCreate={handleMapCreate} // 지도 객체를 가져오는 콜백 
+        >
         <MapMarker position={center} />
         <SmallSignBoard level={level} onOpenLarge={() => setShowLarge(true)} />
       </Map>
