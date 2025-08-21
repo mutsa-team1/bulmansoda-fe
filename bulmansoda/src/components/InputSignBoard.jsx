@@ -2,7 +2,7 @@ import { useState } from "react";
 import inputSignBoard from "../assets/inputsignboard.svg";
 
 // 팻말 - 불만 입력 창 
-export default function InputSignBoard({onSubmit}) {
+export default function InputSignBoard({onSubmit, onCancel}) {
   const [text, setText] = useState(); // 입력값 상태 관리 
 
   const handleSubmit = () => {
@@ -69,6 +69,23 @@ export default function InputSignBoard({onSubmit}) {
           >
             완료
           </button>
+
+           {/* 취소 버튼 (옵션) */}
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="
+                absolute -bottom-8 left-0
+                bg-gray-300 hover:bg-gray-400 active:bg-gray-500
+                text-gray-800 text-xs sm:text-sm font-medium
+                rounded-md px-[17px] py-[7px]
+                focus:outline-none focus:ring-1 focus:ring-gray-400
+              "
+            >
+              취소
+            </button>
+          )}
         </div>
       </div>
     </div>
