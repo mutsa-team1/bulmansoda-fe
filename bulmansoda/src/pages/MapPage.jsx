@@ -4,6 +4,7 @@ import SearchBar from "../components/SearchBar";
 import SmallSignBoard from "../components/SmallSignBoard";
 import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
+// import useGeolocation from "../hooks/useGeolocation";
 
 // Individual 모드(레벨1~3) -> "default(하얀색, 삭제기능있음)", "input" , "adjust"
 // Group 모드 (레벨 4 이상) -> "default(빨간색, 팻말 클릭 시 CommunityPage 화면)", "community"
@@ -15,7 +16,7 @@ import InputSignBoard from "../components/InputSignBoard";
 // "group"      -> "default" | "community"
 
 export default function MapPage() {
-  const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
+  const [center, setCenter] = useState({ lat: 37.46810567643863, lng: 127.03924802821535 }); // 양재 aT 센터
   const [level, setLevel] = useState(3);
 
   const viewMode = level < 4 ? "individual" : "group";
@@ -27,6 +28,17 @@ export default function MapPage() {
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
+
+  // !!!! 현재 위치 받아오기 기능 구현함, 근데 양재 aT 센터 그냥 디폴트로 해 둠 일단 주석처리
+  // const { pos } = useGeolocation();
+  // // 위치를 받으면 한 번만 중심 이동 (무한 렌더링 방지)
+  // useEffect(() => {
+  //   if (pos) {
+  //     setCenter({ lat: pos.lat, lng: pos.lng });
+  //     // setLevel(3);
+  //   }
+  // }, [pos]);
+
 
   // viewMode 전환 안전장치 (subMode 일관성 유지 등)
   useEffect(() => {
@@ -40,7 +52,7 @@ export default function MapPage() {
     }
   }, [viewMode]); // level 변화로 viewMode가 달라지면 정리
 
-  // !!!! 로컬 스토리지 load/save !!!!
+  // !!!! 로컬 스토리지 load/save !!!! => 이 부분 DB 연결 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("traffic_pins_v1");
