@@ -3,20 +3,30 @@ import redSign from '../assets/redsign.svg';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+/**
+ * props
+ * - viewMode: "individual" | "group"
+ * - subMode : "default" | "input" | "adjust" | "community"
+ * - text / message: 표시할 문구
+ * - onOpenLarge: group/default에서 클릭 시 호출(Community 진입 등)
+ * - onDelete   : individual/default에서 삭제 확정 시 호출(핀 제거 등)
+ */
 export default function SmallSignBoard({
-  level,
-  onOpenLarge,
-  asPin = false,
+  viewMode = 'individual',
+  subMode = 'default',
   text,
   message,
-  isAdjusting = false,
+  onOpenLarge,
   onDelete,
 }) {
   const [showDelete, setShowDelete] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
-  const isUnderFour = level < 4;
   const boardRef = useRef(null);
+
+  const isIndividual = viewMode === 'individual';
+  const isAdjusting = isIndividual && subMode === 'adjust';
+  const canToggleDelete = isIndividual && subMode === 'default' && !isAdjusting;
 
   const displayText =
     (typeof text === 'string' && text) ||
@@ -24,20 +34,24 @@ export default function SmallSignBoard({
     '교통사고 삼거리 진입불가';
 
   const handleClick = () => {
-    if (isAdjusting) return; // 조정 중에는 클릭 무시
-    if (isUnderFour) setShowDelete((prev) => !prev);
-    else onOpenLarge?.();
+    if (isAdjusting) return; // 조정 중에는 동작 없음
+
+    if (isIndividual) {
+      if (subMode === 'default') setShowDelete((prev) => !prev);
+    } else {
+      if (subMode === 'default') onOpenLarge?.(); // 커뮤니티 페이지 전환 등
+    }
   };
 
   const handleDeleteClick = (e) => {
-    e.stopPropagation(); // ✅ 버블링 방지
+    e.stopPropagation();
     setShowConfirm(true);
   };
 
   const confirmDelete = () => {
     setShowConfirm(false);
     setIsDeleted(true);
-    onDelete?.(); // 상위에 알림(예: pinPos 초기화)
+    onDelete?.();
   };
 
   const cancelDelete = () => {
@@ -48,7 +62,7 @@ export default function SmallSignBoard({
   // 바깥 클릭 시 삭제 토글 닫기 (모달 열려있으면 무시)
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (showConfirm) return; // ✅ 모달 열려있으면 무시
+      if (showConfirm) return;
       if (boardRef.current && !boardRef.current.contains(e.target)) {
         setShowDelete(false);
       }
@@ -57,33 +71,23 @@ export default function SmallSignBoard({
     return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, [showConfirm]);
 
-  // level 변경 시 삭제 토글 닫기
+  // 모드 변경 시 삭제 토글 닫기
   useEffect(() => {
     setShowDelete(false);
-  }, [level]);
+  }, [viewMode, subMode]);
 
   if (isDeleted) return null;
 
-  const wrapperClass = asPin
-    ? `
-      relative z-20
-      w-[85.393px] h-[62.625px]
-      sm:w-[200px] sm:h-[150px]
-      md:w-[300px] md:h-[220px]
-      lg:w-[400px] lg:h-[300px]
-      xl:w-[500px] xl:h-[375px]
-      p-0.5 cursor-pointer
-    `
-    : `
-      absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-      z-20
-      w-[85.393px] h-[62.625px]
-      sm:w-[200px] sm:h-[150px]
-      md:w-[300px] md:h-[220px]
-      lg:w-[400px] lg:h-[300px]
-      xl:w-[500px] xl:h-[375px]
-      p-0.5 cursor-pointer
-    `;
+  // ✅ 항상 지도 오버레이 기준(앵커 배치)으로 사용
+  const wrapperClass = `
+    relative z-20
+    w-[85.393px] h-[62.625px]
+    sm:w-[200px] sm:h-[150px]
+    md:w-[300px] md:h-[220px]
+    lg:w-[400px] lg:h-[300px]
+    xl:w-[500px] xl:h-[375px]
+    p-0.5 cursor-pointer
+  `;
 
   const adjustingRing = isAdjusting ? 'ring-2 ring-red-400 ring-offset-2 animate-pulse' : '';
 
@@ -91,22 +95,21 @@ export default function SmallSignBoard({
     <>
       <div ref={boardRef} onClick={handleClick} className={`${wrapperClass} ${adjustingRing}`}>
         <img
-          src={isUnderFour ? whiteSign : redSign}
+          src={isIndividual ? whiteSign : redSign}
           alt="작은 팻말"
           className="w-full h-full object-contain select-none pointer-events-none"
           draggable={false}
         />
 
         <div className="absolute inset-0 flex items-center justify-center p-1 px-1.5 pb-3">
-          {showDelete && isUnderFour && !isAdjusting ? (
+          {canToggleDelete && showDelete ? (
             <DeleteButton onClick={handleDeleteClick} />
           ) : (
             <span
               className={`
-                ${isUnderFour ? 'text-black' : 'text-white'}
+                ${isIndividual ? 'text-black' : 'text-white'}
                 text-[10px] sm:text-xl md:text-2xl font-extrabold 
-                rounded-lg text-center mx-1 leading-snug break-keep
-                line-clamp-2
+                rounded-lg text-center mx-1 leading-snug break-keep line-clamp-2
               `}
               title={displayText}
             >
@@ -116,7 +119,6 @@ export default function SmallSignBoard({
         </div>
       </div>
 
-      {/* ✅ 포털로 최상단에 모달 렌더 */}
       {showConfirm &&
         createPortal(
           <DeleteConfirmModal onConfirm={confirmDelete} onCancel={cancelDelete} />,
@@ -127,9 +129,8 @@ export default function SmallSignBoard({
 }
 
 function DeleteButton({ onClick }) {
-  // wrapper의 onClick이 먼저 실행되지 않도록 버튼 자체에서도 버블링 차단
   const handleBtnClick = (e) => {
-    e.stopPropagation(); // ✅ 이중 안전장치
+    e.stopPropagation();
     onClick?.(e);
   };
   return (
@@ -148,7 +149,6 @@ function DeleteButton({ onClick }) {
 }
 
 function DeleteConfirmModal({ onConfirm, onCancel }) {
-  // 모달 내부 클릭은 배경 닫힘과 분리
   const stop = (e) => e.stopPropagation();
   return (
     <div

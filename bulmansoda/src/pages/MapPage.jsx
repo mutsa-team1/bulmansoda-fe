@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { CustomOverlayMap, Map, MapMarker } from "react-kakao-maps-sdk";
 import SearchBar from "../components/SearchBar";
 import SmallSignBoard from "../components/SmallSignBoard";
-import LargeSignBoard from "../components/LargeSignBoard";
 import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
 
@@ -17,7 +16,7 @@ import InputSignBoard from "../components/InputSignBoard";
 
 export default function MapPage() {
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
-  const [level, setLevel] = useState(4);
+  const [level, setLevel] = useState(3);
 
   // const [showLarge, setShowLarge] = useState(false);
   const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
@@ -162,7 +161,6 @@ export default function MapPage() {
             {subMode === "adjust" && (
               <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
                 <SmallSignBoard
-                  asPin
                   viewMode="individual"
                   subMode="adjust"
                   isAdjusting
@@ -180,7 +178,6 @@ export default function MapPage() {
             {pinPos && subMode === "default" && (
               <CustomOverlayMap position={pinPos} xAnchor={0.5} yAnchor={1} zIndex={5}>
                 <SmallSignBoard
-                  asPin
                   viewMode="group"
                   subMode="default"
                   text={inputText}
