@@ -5,12 +5,12 @@ import SmallSignBoard from "../components/SmallSignBoard";
 import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
 
-// Individual 모드(레벨1~3) -> "default(하얀색, 삭제기능있음)", "input" , "adjust" 모드로 나뉨 
-// Group 모드 (레벨 4 이상) -> "default(빨간색, 팻말 클릭 시 CommunirtPage 화면으로", "community" 모드로 나뉨
+// Individual 모드(레벨1~3) -> "default(하얀색, 삭제기능있음)", "input" , "adjust"
+// Group 모드 (레벨 4 이상) -> "default(빨간색, 팻말 클릭 시 CommunityPage 화면)", "community"
 
-// 최종 모드 정리 
+// 최종 모드 정리
 // viewMode: "individual" | "group"
-// subMode: 
+// subMode:
 // "individual" -> "default" | "input" | "adjust"
 // "group"      -> "default" | "community"
 
@@ -18,24 +18,17 @@ export default function MapPage() {
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 });
   const [level, setLevel] = useState(3);
 
-  // const [showLarge, setShowLarge] = useState(false);
+  const viewMode = level < 4 ? "individual" : "group";
   const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
-  const [pinPos, setPinPos] = useState(null); // 최종 확정된 위치
-  const [inputText, setInputText] = useState(""); // 팻말 텍스트 
+
+  // 여러 개 핀 상태관리 (Individual 전용)
+  const [pins, setPins] = useState([]); // [{id, lat, lng, text}]
+  const [inputText, setInputText] = useState(""); // 팻말 텍스트
 
   const inputRef = useRef(null);
-  const mapRef = useRef(null); // 지도 객체 보관 
+  const mapRef = useRef(null);
 
-  // level에 따라 상위 모드 결정 
-  const viewMode = level < 4 ? "individual" : "group";
-
-  // 최신 subMode / viewMode를 이벤트 리스너에서 참조하기 위한 ref
-  const subModeRef = useRef(subMode);
-  const viewModeRef = useRef(viewMode);
-  useEffect(() => { subModeRef.current = subMode; }, [subMode]);
-  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
-
-  // viewMode 전환 시 subMode를 일관성 있게 정리
+  // viewMode 전환 안전장치 (subMode 일관성 유지 등)
   useEffect(() => {
     // group으로 바뀌면 input/adjust는 무효 → default
     if (viewMode === "group" && (subMode === "input" || subMode === "adjust")) {
@@ -47,6 +40,27 @@ export default function MapPage() {
     }
   }, [viewMode]); // level 변화로 viewMode가 달라지면 정리
 
+  // !!!! 로컬 스토리지 load/save !!!!
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("traffic_pins_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setPins(parsed);
+      }
+    } catch (e) {
+      console.warn("Failed to load pins from storage:", e);
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("traffic_pins_v1", JSON.stringify(pins));
+    } catch (e) {
+      console.warn("Failed to save pins to storage:", e);
+    }
+  }, [pins]);
+
+  // 장소 검색 기능 (간단 버전)
   const onSearch = () => {
     const q = inputRef.current?.value?.trim();
     if (!q || !window.kakao?.maps?.services) return;
@@ -56,10 +70,16 @@ export default function MapPage() {
       if (status === window.kakao.maps.services.Status.OK && res.length) {
         const { y, x } = res[0];
         setCenter({ lat: parseFloat(y), lng: parseFloat(x) });
-        setLevel(2); // 확대해서 individual 모드로 이동 
+        setLevel(2); // 확대해서 individual 모드로 이동
       }
     });
   };
+
+  // 최신 subMode / viewMode를 이벤트 리스너에서 참조하기 위한 ref
+  const subModeRef = useRef(subMode);
+  const viewModeRef = useRef(viewMode);
+  useEffect(() => { subModeRef.current = subMode; }, [subMode]);
+  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
 
   // 지도 생성
   const handleMapCreate = (map) => {
@@ -70,7 +90,7 @@ export default function MapPage() {
       setLevel(map.getLevel());
     });
 
-    // 조정 모드일 때만 중심 좌표를 state에 동기화 
+    // 조정 모드일 때만 중심 좌표를 state에 동기화
     window.kakao.maps.event.addListener(map, "center_changed", () => {
       if (subModeRef.current === "adjust" && viewModeRef.current === "individual") {
         const c = map.getCenter();
@@ -85,16 +105,23 @@ export default function MapPage() {
     setSubMode("adjust");
   };
 
-  // 조정 완료 시 → 확정된 위치 좌표로 저장하고 default 복귀
+  // 조정 완료 시 → 확정된 위치 좌표로 새 핀 저장하고 default 복귀
   const handleAdjustComplete = () => {
-    setPinPos(center); // 지도 중심 좌표를 최종 저장
+    const id = (crypto?.randomUUID && crypto.randomUUID()) || `${Date.now()}_${Math.random()}`;
+    setPins((prev) => [...prev, { id, lat: center.lat, lng: center.lng, text: inputText }]);
+    setInputText("");
     setSubMode("default");
   };
 
-  // group 모드에서 커뮤니티 열기
-  const openCommunity = () => {
-    setSubMode("community");
+  // 핀 삭제 (Individual 전용)
+  const removePin = (id) => {
+    setPins((prev) => prev.filter((p) => p.id !== id));
   };
+
+  // group 모드에서 커뮤니티 열기 (현재는 패널만; 추후 라우팅/DB 연동)
+  // const openCommunity = () => {
+  //   setSubMode("community");
+  // };
 
   // group 모드의 커뮤니티 패널 (간단한 오버레이; 실제 페이지 연결로 교체 가능)
   const CommunityPanel = ({ onClose }) => (
@@ -110,7 +137,8 @@ export default function MapPage() {
           </button>
         </div>
         <div className="text-gray-700">
-          여기에 커뮤니티 리스트 / 상세를 렌더링하세요. (라우팅으로 대체 가능)
+          {/* TODO: 그룹 모드 데이터는 추후 외부 DB 연동 후 여기서 렌더링 */}
+          외부 데이터 연동 예정입니다.
         </div>
       </div>
     </div>
@@ -125,6 +153,7 @@ export default function MapPage() {
       <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
         <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
           레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
+          {viewMode === "individual" && <> · 핀: {pins.length}</>}
         </div>
       </div>
 
@@ -138,58 +167,55 @@ export default function MapPage() {
         {/* 기준 마커 - 추후 삭제 예정 */}
         <MapMarker position={center} />
 
-        {/* === Individual 모드 렌더링 === */}
-        {viewMode === "individual" && (
-          <>
-            {/* 확정된 팻말 (default일 때만 클릭/삭제 등 적용) */}
-            {pinPos && subMode === "default" && (
-              <CustomOverlayMap position={pinPos} xAnchor={0.5} yAnchor={1} zIndex={5}>
-                <SmallSignBoard
-                  asPin
-                  viewMode="individual"
-                  subMode="default"
-                  text={inputText}
-                  onDelete={() => {
-                    setPinPos(null);
-                    setInputText("");
-                  }}
-                />
-              </CustomOverlayMap>
-            )}
+        {/* === Individual 모드: 확정된 모든 핀 렌더 === */}
+        {viewMode === "individual" && subMode === "default" &&
+          pins.map((p) => (
+            <CustomOverlayMap
+              key={p.id}
+              position={{ lat: p.lat, lng: p.lng }}
+              xAnchor={0.5}
+              yAnchor={1}
+              zIndex={5}
+            >
+              <SmallSignBoard
+                viewMode="individual"
+                subMode="default"
+                text={p.text}
+                onDelete={() => removePin(p.id)}
+              />
+            </CustomOverlayMap>
+          ))
+        }
 
-            {/* 위치 조정 중 → 지도 중심에 미리보기 */}
-            {subMode === "adjust" && (
-              <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
-                <SmallSignBoard
-                  viewMode="individual"
-                  subMode="adjust"
-                  isAdjusting
-                  text={inputText}
-                />
-              </CustomOverlayMap>
-            )}
+        {/* === Group 모드: 로컬 핀 사용하지 않음 (추후 DB 렌더링) === */}
+        {viewMode === "group" && subMode === "default" && (
+          <>
+            {/* TODO: 외부 DB에서 불러온 그룹 데이터로 렌더링 예정 */}
+            {/* 예: groupPins.map(... SmallSignBoard viewMode="group" subMode="default" onOpenLarge={openCommunity}) */}
           </>
         )}
 
-        {/* === Group 모드 렌더링 === */}
-        {viewMode === "group" && (
-          <>
-            {/* 그룹 모드의 기본: 빨간 팻말, 클릭 시 커뮤니티 열기 */}
-            {pinPos && subMode === "default" && (
-              <CustomOverlayMap position={pinPos} xAnchor={0.5} yAnchor={1} zIndex={5}>
-                <SmallSignBoard
-                  viewMode="group"
-                  subMode="default"
-                  text={inputText}
-                  onOpenLarge={openCommunity} // 클릭 → community 모드
-                />
-              </CustomOverlayMap>
-            )}
-          </>
+        {/* === 위치 조정 미리보기 (지도 중심) — Individual/adjust 전용 === */}
+        {viewMode === "individual" && subMode === "adjust" && (
+          <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
+            <SmallSignBoard
+              viewMode="individual"
+              subMode="adjust"
+              text={inputText}
+            />
+          </CustomOverlayMap>
         )}
       </Map>
 
-      {/* === Individual 모드 전용 오버레이들 === */}
+      {/* (옵션) 조정 가이드 십자선 */}
+      {viewMode === "individual" && subMode === "adjust" && (
+        <div className="pointer-events-none absolute inset-0 z-20">
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-px h-full bg-black/20"></div>
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 h-px w-full bg-black/20"></div>
+        </div>
+      )}
+
+      {/* 입력 모달 (Individual 전용) */}
       {viewMode === "individual" && subMode === "input" && (
         <InputSignBoard
           onSubmit={handleInputComplete}
@@ -197,6 +223,7 @@ export default function MapPage() {
         />
       )}
 
+      {/* 조정 완료 버튼 (Individual 전용) */}
       {viewMode === "individual" && subMode === "adjust" && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
           <button
@@ -208,12 +235,12 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* === Group 모드 전용 오버레이 === */}
+      {/* 그룹 모드 커뮤니티 패널 */}
       {viewMode === "group" && subMode === "community" && (
         <CommunityPanel onClose={() => setSubMode("default")} />
       )}
 
-      {/* 하단 신고 버튼: Individual 모드의 default에서만 노출 */}
+      {/* 하단 신고 버튼: Individual/default 에서만 노출 */}
       {viewMode === "individual" && subMode === "default" && (
         <TrafficButton onClick={() => setSubMode("input")} />
       )}
