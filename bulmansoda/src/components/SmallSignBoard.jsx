@@ -135,6 +135,17 @@ function DeleteConfirmModal({ onConfirm, onCancel }) {
 
         <div className="flex justify-center space-x-4">
           <button
+            onClick={onCancel}
+            className="
+              bg-gray-100 hover:bg-gray-300 active:bg-gray-500
+              text-gray-950 text-xs sm:text-sm md:text-base font-semibold
+              rounded px-3 sm:px-4 py-1.5 sm:py-2
+              focus:outline-none shadow-md
+            "
+          >
+            취소
+          </button>
+          <button
             onClick={onConfirm}
             className="
               bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
@@ -146,17 +157,7 @@ function DeleteConfirmModal({ onConfirm, onCancel }) {
             삭제
           </button>
 
-          <button
-            onClick={onCancel}
-            className="
-              bg-gray-100 hover:bg-gray-300 active:bg-gray-500
-              text-gray-950 text-xs sm:text-sm md:text-base font-semibold
-              rounded px-3 sm:px-4 py-1.5 sm:py-2
-              focus:outline-none shadow-md
-            "
-          >
-            취소
-          </button>
+
         </div>
       </div>
     </div>
