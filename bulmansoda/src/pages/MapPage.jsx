@@ -123,7 +123,7 @@ export default function MapPage() {
 
       {/* 레벨/모드 배지 */}
       <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
-        <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-sm font-bold">
+        <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
           레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
         </div>
       </div>

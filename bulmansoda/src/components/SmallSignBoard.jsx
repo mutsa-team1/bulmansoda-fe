@@ -101,15 +101,17 @@ export default function SmallSignBoard({
           draggable={false}
         />
 
-        <div className="absolute inset-0 flex items-center justify-center p-1 px-1.5 pb-3">
+        <div className="absolute inset-0 flex items-center justify-center p-1 px-1.5 pb-3.5">
           {canToggleDelete && showDelete ? (
             <DeleteButton onClick={handleDeleteClick} />
           ) : (
             <span
               className={`
                 ${isIndividual ? 'text-black' : 'text-white'}
-                text-[10px] sm:text-xl md:text-2xl font-extrabold 
-                rounded-lg text-center mx-1 leading-snug break-keep line-clamp-2
+                text-[11px] sm:text-xl md:text-2xl font-extrabold text-center
+                leading-tight px-0.5
+                whitespace-pre-wrap break-words [text-wrap:balance]
+                max-w-[100%] max-h-[90%] overflow-hidden
               `}
               title={displayText}
             >
