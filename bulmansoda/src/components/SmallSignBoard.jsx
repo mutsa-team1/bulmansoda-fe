@@ -1,6 +1,6 @@
 import whiteSign from '../assets/whitesign.svg';
 import redSign from '../assets/redsign.svg';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // 메인 컴포넌트
 export default function SmallSignBoard({ level, onOpenLarge }) {
@@ -8,12 +8,14 @@ export default function SmallSignBoard({ level, onOpenLarge }) {
   const [showConfirm, setShowConfirm] = useState(false); // 모달 보이기 여부
   const [isDeleted, setIsDeleted] = useState(false); // 실제 삭제 여부
   const isUnderFour = level < 4;
+  const boardRef = useRef(null);
 
   const handleClick = () => {
     if (isUnderFour) {
-      setShowDelete(true);
+      // 이미 삭제버튼이 보이는 상태에서 팻말 다시 클릭 → 텍스트로 복귀
+      setShowDelete((prev) => !prev);
     } else {
-      if(onOpenLarge) onOpenLarge(); 
+      if (onOpenLarge) onOpenLarge();
     }
   };
 
@@ -32,12 +34,26 @@ export default function SmallSignBoard({ level, onOpenLarge }) {
     setShowDelete(false); // 취소 시 다시 텍스트 복귀
   };
 
+  // 화면 바깥 클릭 시 → 텍스트로 복귀
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (boardRef.current && !boardRef.current.contains(e.target)) {
+        setShowDelete(false); // 외부 클릭하면 닫기
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (isDeleted) return null;
 
   return (
     <>
       {/* 팻말 */}
       <div
+        ref={boardRef}
         onClick={handleClick}
         className="
           absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
