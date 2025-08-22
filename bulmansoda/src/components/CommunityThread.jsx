@@ -83,7 +83,7 @@ export default function CommunityThread() {
       </div>
 
       {/* 하단 입력 바 (고정) */}
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
+      <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t border-gray-200 shadow-xl shadow-black px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-sm font-extrabold text-gray-900">
             {currentUser}

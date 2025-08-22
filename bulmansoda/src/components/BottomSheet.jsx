@@ -176,7 +176,7 @@ export default function BottomSheet({
 
       <div
         ref={sheetRef}
-        className={`absolute inset-x-0 bottom-0 bg-white border-t shadow-2xl rounded-t-2xl pointer-events-auto ${className}`}
+        className={`absolute inset-x-0 bottom-0 bg-white border-t border-gray-200 shadow-2xl shadow-black rounded-t-2xl pointer-events-auto ${className}`}
         style={{
           height,
           transition: draggingRef.current ? "none" : "height 220ms ease",

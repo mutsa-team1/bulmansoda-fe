@@ -6,11 +6,11 @@ import angryIcon from "../assets/angry.png";
  * LargeSignBoard
  * props:
  * - title: string (팻말에 표시할 텍스트)
- * - count: number (공감/댓글 수 등)
+ * - likes: number (공감/댓글 수 등)
  * - onClose: () => void
  */
-export default function LargeSignBoard({ title, count = 0, onClose }) {
-  const [likes, setLikes] = useState(count);
+export default function LargeSignBoard({ title, initialLikes = 0, onClose }) {
+  const [likes, setLikes] = useState(initialLikes);
 
   const addLike = () => {
     setLikes((prev) => prev + 1);
@@ -66,7 +66,7 @@ export default function LargeSignBoard({ title, count = 0, onClose }) {
       {/* 닫기 버튼 */}
       <button
         onClick={onClose}
-        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white text-xs sm:text-sm rounded-full px-2 py-1"
+        className="absolute -top-0.5 -right-2 bg-black/60 hover:bg-black/80 text-white text-xs sm:text-sm rounded-full px-2 py-1"
       >
         X
       </button>

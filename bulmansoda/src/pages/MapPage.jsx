@@ -235,7 +235,7 @@ export default function MapPage() {
           {selectedBoard && (
             <LargeSignBoard
               title={selectedBoard.keywords.join(" ")}
-              count={5}
+              initialLikes={typeof selectedBoard.likes === "number" ? selectedBoard.likes : 0}
               onClose={closeCommunity}
             />
           )}
