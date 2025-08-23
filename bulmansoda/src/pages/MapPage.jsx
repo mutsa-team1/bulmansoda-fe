@@ -100,28 +100,28 @@ export default function MapPage() {
   };
 
   // 데이터 불러오기 함수 분리
-const loadMarkers = async () => {
-  const bounds = {
-    minLat: 33.0,
-    maxLat: 39.0,
-    minLng: 124.0,
-    maxLng: 132.0,
+  const loadMarkers = async () => {
+    const bounds = {
+      minLat: 33.0,
+      maxLat: 39.0,
+      minLng: 124.0,
+      maxLng: 132.0,
+    };
+    try {
+      const markers = await fetchMarkers(bounds);
+      setPins(markers);
+
+      const centers = await fetchCenterMarkers(bounds);
+      setCenterMarkers(centers);
+    } catch (e) {
+      console.error("마커 불러오기 실패:", e);
+    }
   };
-  try {
-    const markers = await fetchMarkers(bounds);
-    setPins(markers);
 
-    const centers = await fetchCenterMarkers(bounds);
-    setCenterMarkers(centers);
-  } catch (e) {
-    console.error("마커 불러오기 실패:", e);
-  }
-};
-
-// 최초 1회 + viewMode 바뀔 때마다
-useEffect(() => {
-  loadMarkers();
-}, [viewMode]);
+  // 최초 1회 + viewMode 바뀔 때마다
+  useEffect(() => {
+    loadMarkers();
+  }, [viewMode]);
 
 
   // adjust 위치 확정 → 서버에 저장 (POST)
@@ -291,7 +291,9 @@ useEffect(() => {
           {selectedBoard && (
             <LargeSignBoard
               title={selectedBoard.keywords.join(" ")}
-              initialLikes={typeof selectedBoard.likes === "number" ? selectedBoard.likes : 0}
+              initialLikes={selectedBoard.likes ?? 0}
+              userId={dummy_id}
+              centerMarkerId={selectedBoard.centerMarkerId}
               onClose={closeCommunity}
             />
           )}

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import largeSignBoard from "../assets/largesignboard.svg";
 import angryIcon from "../assets/angry.png";
+import { fetchCenterMarkerCommunity, likeCenterMarker } from "../api/centerMarker";
 
 /**
  * LargeSignBoard
@@ -9,11 +10,39 @@ import angryIcon from "../assets/angry.png";
  * - likes: number (공감/댓글 수 등)
  * - onClose: () => void
  */
-export default function LargeSignBoard({ title, initialLikes = 0, onClose }) {
-  const [likes, setLikes] = useState(initialLikes);
+export default function LargeSignBoard({
+  title,
+  userId,
+  centerMarkerId,
+  onClose
+}) {
+  const [likes, setLikes] = useState(0);
+  const [loading, setLoading] = useState(false); // 로딩 state 추가
 
-  const addLike = () => {
-    setLikes((prev) => prev + 1);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchCenterMarkerCommunity(userId, centerMarkerId);
+        setLikes(data.likeCount);
+      } catch (e) {
+        console.error("❌ 초기 데이터 불러오기 실패:", e);
+      }
+    };
+    loadData();
+  }, [userId, centerMarkerId]);
+
+  const addLike = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      await likeCenterMarker({ userId, centerMarkerId }); // ✅ 서버 호출
+      setLikes((prev) => prev + 1); // 성공 시 증가
+    } catch (error) {
+      console.error("❌ 공감 처리 실패:", error);
+      alert("공감 등록에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,13 +77,15 @@ export default function LargeSignBoard({ title, initialLikes = 0, onClose }) {
           {title}
         </span>
 
-        {/* 버튼 (항상 우측 하단 고정) */}
+        {/* 버튼 */}
         <div className="absolute bottom-13 right-6">
           <button
             onClick={addLike}
+            disabled={loading}
             className="
               flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm font-semibold shadow-md
               bg-[#1E1E1E] text-white hover:bg-[#2c2c2c] active:bg-[#111111]
+              disabled:opacity-50 disabled:cursor-not-allowed
             "
           >
             <img src={angryIcon} alt="공감" className="w-5 h-5" />
