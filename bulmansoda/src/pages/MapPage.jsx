@@ -11,10 +11,10 @@ import LargeSignBoard from "../components/LargeSignBoard";
 
 import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
+import { fetchCenterMarkerCommunity } from "../api/centerMarker";
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
-
 
   const [center, setCenter] = useState({
     lat: 37.46810567643863,
@@ -165,10 +165,21 @@ export default function MapPage() {
   };
 
   // Group: 커뮤니티 오픈(바텀시트 + LargeSignBoard)
-  const openCommunity = (centerItem) => {
-    setSelectedCenter(centerItem);
-    setSelectedBoard(centerItem);
-    setSubMode("community");
+   // ✅ 커뮤니티 열 때 서버에서 최신 정보 fetch
+  const openCommunity = async (centerItem) => {
+    try {
+      const data = await fetchCenterMarkerCommunity(dummy_id, centerItem.centerMarkerId);
+      setSelectedCenter(centerItem);
+      setSelectedBoard({
+        ...centerItem,
+        likes: data.likeCount,
+        comments: data.comments,
+      });
+      setSubMode("community");
+    } catch (e) {
+      console.error("커뮤니티 불러오기 실패:", e);
+      alert("커뮤니티 정보를 불러올 수 없습니다.");
+    }
   };
 
   const closeCommunity = () => {

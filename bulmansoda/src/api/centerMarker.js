@@ -71,7 +71,7 @@ export const createCenterComment = async ({ userId, centerMarkerId, content }) =
 export const deleteCenterComment = async (commentId) => {
   try {
     const res = await api.delete("/center/comment/delete", {
-      data: { commentId }, // 객체로 감싸기
+      data: commentId ,
     });
     return res.data; // 서버에서 success 여부를 반환하는 게 좋음
   } catch (error) {

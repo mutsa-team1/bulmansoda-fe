@@ -1,41 +1,81 @@
 // CommunityThread.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ThumbsUp, Trash2, Send } from "lucide-react";
+import {
+  fetchCenterMarkerCommunity,
+  createCenterComment,
+  deleteCenterComment,
+  likeCenterComment,
+} from "../api/centerMarker";
 
 // 샘플 데이터
-const initialComments = [
-  {
-    id: "c1",
-    author: "피해자1",
-    ts: "08/20 07:30",
-    text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
-    likes: 1,
-  },
-  {
-    id: "c2",
-    author: "피해자1",
-    ts: "08/20 07:30",
-    text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
-    likes: 0,
-  },
-  {
-    id: "c3",
-    author: "피해자2",
-    ts: "08/20 07:30",
-    text: "",
-    likes: 0,
-  },
-];
+// const initialComments = [
+//   {
+//     id: "c1",
+//     author: "피해자1",
+//     ts: "08/20 07:30",
+//     text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
+//     likes: 1,
+//   },
+//   {
+//     id: "c2",
+//     author: "피해자1",
+//     ts: "08/20 07:30",
+//     text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
+//     likes: 0,
+//   },
+//   {
+//     id: "c3",
+//     author: "피해자2",
+//     ts: "08/20 07:30",
+//     text: "",
+//     likes: 0,
+//   },
+// ];
 
-export default function CommunityThread() {
-  const [comments, setComments] = useState(initialComments);
+export default function CommunityThread({ userId, centerMarkerId }) {
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const currentUser = "피해자3";
+  const [loading, setLoading] = useState(false);
 
-  const like = (id) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, likes: c.likes + 1 } : c))
-    );
+  // ✅ 마운트 시 서버에서 댓글 불러오기
+  useEffect(() => {
+    const loadComments = async () => {
+      try {
+        const data = await fetchCenterMarkerCommunity(userId, centerMarkerId);
+        console.log("서버 댓글 응답:", data.comments);
+        setComments(data.comments || []);
+      } catch (e) {
+        console.error("❌ 댓글 불러오기 실패:", e);
+      }
+    };
+    loadComments();
+  }, [userId, centerMarkerId]);
+
+  // ✅ 댓글 좋아요
+  const like = async (commentId) => {
+    try {
+      await likeCenterComment({ userId, commentId });
+      setComments((prev) =>
+        prev.map((c) =>
+          c.commentId === commentId
+            ? { ...c, likeCount: c.likeCount + 1, isLiked: true }
+            : c
+        )
+      );
+    } catch (e) {
+      console.error("❌ 댓글 좋아요 실패:", e);
+    }
+  };
+
+  // ✅ 댓글 삭제
+  const remove = async (commentId) => {
+    try {
+      await deleteCenterComment(commentId);
+      setComments((prev) => prev.filter((c) => c.commentId !== commentId));
+    } catch (e) {
+      console.error("❌ 댓글 삭제 실패:", e);
+    }
   };
 
   // const report = (id) => {
@@ -43,27 +83,31 @@ export default function CommunityThread() {
   //   alert("신고가 접수되었습니다.");
   // };
 
-  const addRootComment = () => {
+  // ✅ 댓글 작성
+  const addRootComment = async () => {
     const text = newComment.trim();
     if (!text) return;
-    setComments((prev) => [
-      ...prev,
-      {
-        id: `c_${Date.now()}`,
-        author: currentUser,
-        ts: new Date()
-          .toLocaleString("ko-KR", {
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(",", ""),
-        text,
-        likes: 0,
-      },
-    ]);
-    setNewComment("");
+    setLoading(true);
+    try {
+      const id = await createCenterComment({ userId, centerMarkerId, content: text });
+      setComments((prev) => [
+        ...prev,
+        {
+          commentId: id,
+          name: `User${userId}`, // 서버에서 닉네임 내려주면 교체
+          userId,
+          content: text,
+          likeCount: 0,
+          isLiked: false,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+      setNewComment("");
+    } catch (e) {
+      console.error("❌ 댓글 작성 실패:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,23 +115,25 @@ export default function CommunityThread() {
       <div className="pb-36 space-y-2">
         {comments.map((c) => (
           <CommentCard
-            key={c.id}
-            author={c.author}
-            ts={c.ts}
-            text={c.text}
-            likes={c.likes}
-            onLike={() => like(c.id)}
-            // onReport={() => report(c.id)}
+            key={c.commentId}
+            author={c.name}
+            ts={new Date(c.createdAt).toLocaleString("ko-KR", {
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            text={c.content}
+            likes={c.likeCount}
+            onLike={() => like(c.commentId)}
+            onDelete={c.userId === userId ? () => remove(c.commentId) : undefined}
           />
         ))}
       </div>
 
-      {/* 하단 입력 바 (고정) */}
-      <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t border-gray-200 shadow-xl shadow-black px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
+      {/* 입력 바 */}
+      <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t border-gray-200 shadow-xl px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm font-extrabold text-gray-900">
-            {currentUser}
-          </span>
           <input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
@@ -97,8 +143,8 @@ export default function CommunityThread() {
           />
           <button
             onClick={addRootComment}
-            className="grid place-items-center rounded-xl bg-gray-900 text-white px-3 py-2 active:opacity-90"
-            aria-label="전송"
+            disabled={loading}
+            className="grid place-items-center rounded-xl bg-gray-900 text-white px-3 py-2 active:opacity-90 disabled:opacity-50"
           >
             <Send size={18} />
           </button>
@@ -108,10 +154,9 @@ export default function CommunityThread() {
   );
 }
 
-function CommentCard({ author, ts, text, likes, onLike, onReport }) {
+function CommentCard({ author, ts, text, likes, onLike, onDelete }) {
   return (
     <div className="rounded-xl border-2 border-[#E52E21] p-3 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
-      {/* 헤더 */}
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-extrabold text-gray-900">{author}</span>
@@ -119,33 +164,29 @@ function CommentCard({ author, ts, text, likes, onLike, onReport }) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 좋아요 카운트 */}
           <div className="flex items-center gap-1 text-[11px] text-gray-700">
             <span>{likes}</span>
             <ThumbsUp size={14} className="opacity-70" />
           </div>
-
-          {/* 액션 버튼들 (좋아요 / 신고) */}
           <button
             onClick={onLike}
             className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-[12px] text-gray-800 active:bg-gray-50"
           >
             <ThumbsUp size={14} />
           </button>
-          <button
-            onClick={onReport}
-            className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-[12px] text-gray-800 active:bg-gray-50"
-          >
-            <Trash2 size={14} />
-          </button>
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 text-[12px] text-gray-800 active:bg-gray-50"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 본문 */}
       {text && (
-        <p className="mt-1 text-[13px] leading-relaxed text-gray-900">
-          {text}
-        </p>
+        <p className="mt-1 text-[13px] leading-relaxed text-gray-900">{text}</p>
       )}
     </div>
   );
