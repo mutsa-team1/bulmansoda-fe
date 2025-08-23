@@ -67,19 +67,10 @@ export default function CommunityThread({ userId, centerMarkerId }) {
     if (!text) return;
     setLoading(true);
     try {
-      const id = await createCenterComment({ userId, centerMarkerId, content: text });
-      setComments((prev) => [
-        ...prev,
-        {
-          commentId: id,
-          name: `User${userId}`,
-          userId,
-          content: text,
-          likeCount: 0,
-          isLiked: false,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      await createCenterComment({ userId, centerMarkerId, content: text });
+      // 댓글 추가 후 서버에서 최신 데이터 다시 가져오기
+    const data = await fetchCenterMarkerCommunity(userId, centerMarkerId);
+    setComments(data.comments || []);
       setNewComment("");
     } catch (e) {
       console.error("❌ 댓글 작성 실패:", e);
