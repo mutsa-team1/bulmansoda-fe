@@ -9,10 +9,9 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    proxy: {
-      // /api 로 시작하는 요청은 백엔드로 프록시
+    proxy: { // Vercel은 proxy 무시 
       '/api': {
-        target: 'http://3.36.117.217:8080',
+        target: "http://localhost:8080",
         changeOrigin: true,
       },
     },
