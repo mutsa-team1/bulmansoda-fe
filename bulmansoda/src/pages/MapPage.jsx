@@ -104,20 +104,19 @@ export default function MapPage() {
       maxLng: 132.0,
     };
     try {
-      setError(null); // ✅ 에러 초기화
+      setError(null);
       const markers = await fetchMarkers(bounds);
-      setPins(markers);
+      setPins(Array.isArray(markers) ? markers : []); // ✅ 안전 처리
 
       const centers = await fetchCenterMarkers(bounds);
-      setCenterMarkers(centers);
+      setCenterMarkers(Array.isArray(centers) ? centers : []); // ✅ 안전 처리
     } catch (e) {
       console.error("❌ 마커 불러오기 실패:", e);
-      setError("서버와 통신할 수 없습니다."); // ✅ UI 표시용 에러 메시지
-      setPins([]);
-      setCenterMarkers([]);
+      setError("서버에서 데이터를 불러오지 못했습니다.");
+      setPins([]); // ✅ fallback 값
+      setCenterMarkers([]); // ✅ fallback 값
     }
   };
-
   // 최초 + viewMode 변경 시 호출
   useEffect(() => {
     loadMarkers();
