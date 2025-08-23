@@ -1,5 +1,6 @@
 import { useState } from "react";
 import inputSignBoard from "../assets/inputsignboard.svg";
+import toast from "react-hot-toast";
 
 // 팻말 - 불만 입력 창
 export default function InputSignBoard({ onSubmit, onCancel }) {
@@ -8,7 +9,7 @@ export default function InputSignBoard({ onSubmit, onCancel }) {
   const handleSubmit = () => {
     const value = text.trim();
     if (!value) {
-      alert("불만을 입력해주세요!");
+      toast("✏️불만을 입력해주세요!");
       return;
     }
     onSubmit?.(value);

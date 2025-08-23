@@ -1,6 +1,5 @@
 
-import CommunityThread from "./components/CommunityThread";
-import LargeSignBoard from "./components/LargeSignBoard";
+import { Toaster } from "react-hot-toast";
 import MapPage from "./pages/MapPage";
 
 export default function App() {
@@ -8,10 +7,7 @@ export default function App() {
   return (
     <div className="w-screen h-[100dvh]">
       <MapPage />
-      {/* <CommunityPage/> */}
-      {/* <CommentsPanel/> */}
-      {/* <CommunityThread/> */}
-      {/* <LargeSignBoard/> */}
+      <Toaster position="top-center" reverseOrder={false} />
 
     </div>
   );

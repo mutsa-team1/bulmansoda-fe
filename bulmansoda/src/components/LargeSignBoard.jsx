@@ -39,7 +39,6 @@ export default function LargeSignBoard({
       setLikes((prev) => prev + 1); // 성공 시 증가
     } catch (error) {
       console.error("❌ 공감 처리 실패:", error);
-      alert("공감 등록에 실패했습니다.");
     } finally {
       setLoading(false);
     }

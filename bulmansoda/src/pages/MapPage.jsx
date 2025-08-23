@@ -150,7 +150,6 @@ export default function MapPage() {
       setSubMode("default");
     } catch (error) {
       console.error("마커 등록 실패:", error);
-      alert("마커 등록에 실패했습니다.");
     }
   };
 
@@ -159,8 +158,6 @@ export default function MapPage() {
     const ok = await deleteMarker(markerId);
     if (ok) {
       setPins((prev) => prev.filter((p) => p.markerId !== markerId));
-    } else {
-      alert("마커 삭제 실패!");
     }
   };
 
@@ -178,7 +175,6 @@ export default function MapPage() {
       setSubMode("community");
     } catch (e) {
       console.error("커뮤니티 불러오기 실패:", e);
-      alert("커뮤니티 정보를 불러올 수 없습니다.");
     }
   };
 
