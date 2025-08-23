@@ -1,4 +1,3 @@
-// CommunityThread.jsx
 import { useEffect, useState } from "react";
 import { ThumbsUp, Trash2, Send } from "lucide-react";
 import {
@@ -7,11 +6,15 @@ import {
   deleteCenterComment,
   likeCenterComment,
 } from "../api/centerMarker";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 export default function CommunityThread({ userId, centerMarkerId }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [targetComment, setTargetComment] = useState(null);
 
   // ✅ 마운트 시 서버에서 댓글 불러오기
   useEffect(() => {
@@ -42,20 +45,21 @@ export default function CommunityThread({ userId, centerMarkerId }) {
     }
   };
 
-  // ✅ 댓글 삭제
-  const remove = async (commentId) => {
+  // 댓글 삭제 (확인 모달에서 확정 시 호출)
+  const remove = async () => {
+    if (!targetComment) return;
     try {
-      await deleteCenterComment(commentId);
-      setComments((prev) => prev.filter((c) => c.commentId !== commentId));
+      await deleteCenterComment(targetComment.commentId);
+      setComments((prev) =>
+        prev.filter((c) => c.commentId !== targetComment.commentId)
+      );
     } catch (e) {
       console.error("❌ 댓글 삭제 실패:", e);
+    } finally {
+      setShowConfirm(false);
+      setTargetComment(null);
     }
   };
-
-  // const report = (id) => {
-  //   // 실제 구현 시: 신고 API 호출
-  //   alert("신고가 접수되었습니다.");
-  // };
 
   // ✅ 댓글 작성
   const addRootComment = async () => {
@@ -68,7 +72,7 @@ export default function CommunityThread({ userId, centerMarkerId }) {
         ...prev,
         {
           commentId: id,
-          name: `User${userId}`, // 서버에서 닉네임 내려주면 교체
+          name: `User${userId}`,
           userId,
           content: text,
           likeCount: 0,
@@ -100,7 +104,14 @@ export default function CommunityThread({ userId, centerMarkerId }) {
             text={c.content}
             likes={c.likeCount}
             onLike={() => like(c.commentId)}
-            onDelete={c.userId === userId ? () => remove(c.commentId) : undefined}
+            onDelete={
+              c.userId === userId
+                ? () => {
+                  setTargetComment(c);
+                  setShowConfirm(true);
+                }
+                : undefined
+            }
           />
         ))}
       </div>
@@ -124,6 +135,17 @@ export default function CommunityThread({ userId, centerMarkerId }) {
           </button>
         </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {showConfirm && (
+        <DeleteConfirmModal
+          onConfirm={remove}
+          onCancel={() => {
+            setShowConfirm(false);
+            setTargetComment(null);
+          }}
+        />
+      )}
     </div>
   );
 }
