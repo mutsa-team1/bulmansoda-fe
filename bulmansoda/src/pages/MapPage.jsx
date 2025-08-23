@@ -13,6 +13,9 @@ import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
 
 export default function MapPage() {
+  const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
+
+
   const [center, setCenter] = useState({
     lat: 37.46810567643863,
     lng: 127.03924802821535,
@@ -124,7 +127,7 @@ export default function MapPage() {
       const markerId = await createMarker({
         latitude: center.lat,
         longitude: center.lng,
-        userId: 1,          // MVP에서는 더미 userId
+        userId: dummy_id,          // MVP에서는 더미 userId
         content: inputText,
       });
 
@@ -133,7 +136,7 @@ export default function MapPage() {
         ...prev,
         {
           markerId,
-          userId: 1,  // 현재는 더미
+          userId: dummy_id,  // 현재는 더미
           latitude: center.lat,
           longitude: center.lng,
           content: inputText,
@@ -212,7 +215,7 @@ export default function MapPage() {
                 subMode="default"
                 text={p.content}
                 // 삭제 버튼은 userId(더미; 1) 비교 후 조건부로 노출 가능
-                onDelete={p.userId === 1 ? () => removePin(p.markerId) : undefined}
+                onDelete={p.userId === dummy_id ? () => removePin(p.markerId) : undefined}
               />
             </CustomOverlayMap>
           ))}
@@ -311,7 +314,8 @@ export default function MapPage() {
                 </div>
               </div>
             )}
-            <CommunityThread />
+            <CommunityThread userId={dummy_id}
+              centerMarkerId={selectedCenter.centerMarkerId} />
           </BottomSheet>
         </>
       )}
