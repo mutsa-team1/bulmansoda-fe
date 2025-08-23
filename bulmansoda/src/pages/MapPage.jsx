@@ -7,11 +7,10 @@ import InputSignBoard from "../components/InputSignBoard";
 import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
 
-import groupDummy from "../data/groupDummy.json";
 import LargeSignBoard from "../components/LargeSignBoard";
 
 import { createMarker, deleteMarker } from "../api/marker";
-import { fetchMarkers } from "../api/map";
+import { fetchCenterMarkers, fetchMarkers } from "../api/map";
 
 export default function MapPage() {
   const [center, setCenter] = useState({
@@ -24,8 +23,11 @@ export default function MapPage() {
   const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
 
   // Individual 전용 핀
-  const [pins, setPins] = useState([]); // 서버와동기화
+  const [pins, setPins] = useState([]); // 서버와 동기화 
   const [inputText, setInputText] = useState("");
+
+  // centerMarkers 서버와 동기화 
+  const [centerMarkers, setCenterMarkers] = useState([]);
 
   // Group 선택된 센터
   const [selectedCenter, setSelectedCenter] = useState(null);
@@ -94,18 +96,21 @@ export default function MapPage() {
     setSubMode("adjust");
   };
 
-  // ✅ 최초 1회 서버에서 마커 불러오기
+  // 최초 1회 map부분 데이터 가져오기 
   useEffect(() => {
     const loadMarkers = async () => {
       const bounds = {
-        minLat: 33.0,   // 남쪽 (제주도 포함)
-        maxLat: 39.0,   // 북쪽 (휴전선 인근까지)
-        minLng: 124.0,  // 서쪽 (백령도 포함)
-        maxLng: 132.0   // 동쪽 (독도 포함)
+        minLat: 33.0,
+        maxLat: 39.0,
+        minLng: 124.0,
+        maxLng: 132.0,
       };
       try {
         const markers = await fetchMarkers(bounds);
         setPins(markers);
+
+        const centers = await fetchCenterMarkers(bounds);
+        setCenterMarkers(centers);
       } catch (e) {
         console.error("마커 불러오기 실패:", e);
       }
@@ -212,10 +217,10 @@ export default function MapPage() {
             </CustomOverlayMap>
           ))}
 
-        {/* Group/default: 더미 데이터 */}
+        {/* Group/default: 서버에서 가져온 centerMarkers */}
         {viewMode === "group" &&
           subMode === "default" &&
-          groupDummy.map((gc) => (
+          centerMarkers.map((gc) => (
             <CustomOverlayMap
               key={gc.centerMarkerId}
               position={{ lat: gc.latitude, lng: gc.longitude }}
@@ -231,6 +236,7 @@ export default function MapPage() {
               />
             </CustomOverlayMap>
           ))}
+
 
         {/* Individual/adjust: 지도 중심 미리보기 */}
         {viewMode === "individual" && subMode === "adjust" && (
