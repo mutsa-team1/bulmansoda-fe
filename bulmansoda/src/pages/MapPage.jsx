@@ -10,7 +10,7 @@ import CommunityThread from "../components/CommunityThread";
 import groupDummy from "../data/groupDummy.json";
 import LargeSignBoard from "../components/LargeSignBoard";
 
-import { createMarker, fetchMarkers } from "../api/marker";
+import { createMarker, deleteMarker, fetchMarkers } from "../api/marker";
 
 export default function MapPage() {
   const [center, setCenter] = useState({
@@ -142,9 +142,14 @@ export default function MapPage() {
     }
   };
 
-  // 핀 삭제
-  const removePin = (id) => {
-    setPins((prev) => prev.filter((p) => p.id !== id));
+  // 마커 삭제
+  const removePin = async (markerId) => {
+    const ok = await deleteMarker(markerId);
+    if (ok) {
+      setPins((prev) => prev.filter((p) => p.markerId !== markerId));
+    } else {
+      alert("마커 삭제 실패!");
+    }
   };
 
   // Group: 커뮤니티 오픈(바텀시트 + LargeSignBoard)
@@ -200,7 +205,7 @@ export default function MapPage() {
                 viewMode="individual"
                 subMode="default"
                 text={p.content}
-                // 삭제 버튼은 userId 비교 후 조건부로 노출 가능
+                // 삭제 버튼은 userId(더미; 1) 비교 후 조건부로 노출 가능
                 onDelete={p.userId === 1 ? () => removePin(p.markerId) : undefined}
               />
             </CustomOverlayMap>
