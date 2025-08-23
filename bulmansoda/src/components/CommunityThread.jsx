@@ -8,31 +8,6 @@ import {
   likeCenterComment,
 } from "../api/centerMarker";
 
-// 샘플 데이터
-// const initialComments = [
-//   {
-//     id: "c1",
-//     author: "피해자1",
-//     ts: "08/20 07:30",
-//     text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
-//     likes: 1,
-//   },
-//   {
-//     id: "c2",
-//     author: "피해자1",
-//     ts: "08/20 07:30",
-//     text: "로터리에서 SUV가 무리하게 끼어들다 택시 박음요.",
-//     likes: 0,
-//   },
-//   {
-//     id: "c3",
-//     author: "피해자2",
-//     ts: "08/20 07:30",
-//     text: "",
-//     likes: 0,
-//   },
-// ];
-
 export default function CommunityThread({ userId, centerMarkerId }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -43,7 +18,6 @@ export default function CommunityThread({ userId, centerMarkerId }) {
     const loadComments = async () => {
       try {
         const data = await fetchCenterMarkerCommunity(userId, centerMarkerId);
-        console.log("서버 댓글 응답:", data.comments);
         setComments(data.comments || []);
       } catch (e) {
         console.error("❌ 댓글 불러오기 실패:", e);
