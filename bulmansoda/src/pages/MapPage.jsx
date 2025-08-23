@@ -10,7 +10,8 @@ import CommunityThread from "../components/CommunityThread";
 import groupDummy from "../data/groupDummy.json";
 import LargeSignBoard from "../components/LargeSignBoard";
 
-import { createMarker, deleteMarker, fetchMarkers } from "../api/marker";
+import { createMarker, deleteMarker } from "../api/marker";
+import { fetchMarkers } from "../api/map";
 
 export default function MapPage() {
   const [center, setCenter] = useState({
