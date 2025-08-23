@@ -2,7 +2,7 @@ import api from ".";
 
 // 마커 목록 조회 (GET) 
 export const fetchMarkers = async ({ minLat, maxLat, minLng, maxLng }) => {
-  const res = await api.get("/api/map/markers", {
+  const res = await api.get("/map/markers", {
     params: { minLat, maxLat, minLng, maxLng },
   });
   return res.data;
@@ -10,7 +10,7 @@ export const fetchMarkers = async ({ minLat, maxLat, minLng, maxLng }) => {
 
 // 대표 마커 목록 조회 (GET) 
 export const fetchCenterMarkers = async ({ minLat, maxLat, minLng, maxLng }) => {
-  const res = await api.get("/api/map/centerMarkers", {
+  const res = await api.get("/map/centerMarkers", {
     params: { minLat, maxLat, minLng, maxLng },
   });
   return res.data;

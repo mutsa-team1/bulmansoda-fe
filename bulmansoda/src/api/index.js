@@ -2,11 +2,10 @@ import axios from "axios";
 
 // 1) axios 인스턴스 생성
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080", 
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  headers: { "Content-Type": "application/json" },
 });
+
 
 // 2) 요청 인터셉터 등록
 // api.interceptors.request.use((config) => {

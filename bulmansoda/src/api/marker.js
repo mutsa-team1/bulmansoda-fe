@@ -3,7 +3,7 @@ import api from ".";
 
 // 마커 생성 (POST)
 export const createMarker = async ({ latitude, longitude, userId, content }) => {
-  const res = await api.post("/api/marker/create", {
+  const res = await api.post("/marker/create", {
     latitude,
     longitude,
     userId,
@@ -12,10 +12,10 @@ export const createMarker = async ({ latitude, longitude, userId, content }) => 
   return res.data; // 서버는 생성된 id 숫자만 반환
 };
 
-// marker 삭제 API 호출
+// marker 삭제 API 호출 (DELETE)
 export const deleteMarker = async (markerId) => {
   try {
-    await api.delete("/api/marker/delete", {
+    await api.delete("/marker/delete", {
       data: markerId, // DELETE 메서드에서도 data 넣을 수 있음
     });
     return true;
