@@ -6,12 +6,10 @@ import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
 import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
-
 import LargeSignBoard from "../components/LargeSignBoard";
 
 import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
-import { fetchCenterMarkerCommunity } from "../api/centerMarker";
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
@@ -19,22 +17,21 @@ export default function MapPage() {
   const [center, setCenter] = useState({
     lat: 37.46810567643863,
     lng: 127.03924802821535,
-  }); // 양재 aT 센터
+  }); // 기본 위치 (양재 aT 센터)
   const [level, setLevel] = useState(3);
 
   const viewMode = level < 4 ? "individual" : "group";
-  const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
+  const [subMode, setSubMode] = useState("default");
 
-  // Individual 전용 핀
-  const [pins, setPins] = useState([]); // 서버와 동기화 
-  const [inputText, setInputText] = useState("");
-
-  // centerMarkers 서버와 동기화 
+  // 서버 동기화 데이터
+  const [pins, setPins] = useState([]);
   const [centerMarkers, setCenterMarkers] = useState([]);
 
-  // Group 선택된 센터
+  // 상태 관리
+  const [inputText, setInputText] = useState("");
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState(null);
+  const [error, setError] = useState(null); // ✅ 에러 상태 추가
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
@@ -57,12 +54,12 @@ export default function MapPage() {
       if (status === window.kakao.maps.services.Status.OK && res.length) {
         const { y, x } = res[0];
         setCenter({ lat: parseFloat(y), lng: parseFloat(x) });
-        setLevel(2); // individual로 확대
+        setLevel(2);
       }
     });
   };
 
-  // 최신 모드 참조용 (리스너에서 활용)
+  // 최신 모드 참조용
   const subModeRef = useRef(subMode);
   const viewModeRef = useRef(viewMode);
   useEffect(() => {
@@ -81,7 +78,6 @@ export default function MapPage() {
       setLevel(map.getLevel());
     });
 
-    // adjust일 때만 중심 동기화
     window.kakao.maps.event.addListener(map, "center_changed", () => {
       if (
         subModeRef.current === "adjust" &&
@@ -99,7 +95,7 @@ export default function MapPage() {
     setSubMode("adjust");
   };
 
-  // 데이터 불러오기 함수 분리
+  // 데이터 불러오기
   const loadMarkers = async () => {
     const bounds = {
       minLat: 33.0,
@@ -108,38 +104,40 @@ export default function MapPage() {
       maxLng: 132.0,
     };
     try {
+      setError(null); // ✅ 에러 초기화
       const markers = await fetchMarkers(bounds);
       setPins(markers);
 
       const centers = await fetchCenterMarkers(bounds);
       setCenterMarkers(centers);
     } catch (e) {
-      console.error("마커 불러오기 실패:", e);
+      console.error("❌ 마커 불러오기 실패:", e);
+      setError("서버와 통신할 수 없습니다."); // ✅ UI 표시용 에러 메시지
+      setPins([]);
+      setCenterMarkers([]);
     }
   };
 
-  // 최초 1회 + viewMode 바뀔 때마다
+  // 최초 + viewMode 변경 시 호출
   useEffect(() => {
     loadMarkers();
   }, [viewMode]);
 
-
-  // adjust 위치 확정 → 서버에 저장 (POST)
+  // adjust → 서버 저장
   const handleAdjustComplete = async () => {
     try {
       const markerId = await createMarker({
         latitude: center.lat,
         longitude: center.lng,
-        userId: dummy_id,          // MVP에서는 더미 userId
+        userId: dummy_id,
         content: inputText,
       });
 
-      // 응답 받은 id로 상태 업데이트
       setPins((prev) => [
         ...prev,
         {
           markerId,
-          userId: dummy_id,  // 현재는 더미
+          userId: dummy_id,
           latitude: center.lat,
           longitude: center.lng,
           content: inputText,
@@ -150,41 +148,37 @@ export default function MapPage() {
       setSubMode("default");
     } catch (error) {
       console.error("마커 등록 실패:", error);
+      setError("마커 등록에 실패했습니다.");
     }
   };
 
   // 마커 삭제
   const removePin = async (markerId) => {
-    const ok = await deleteMarker(markerId);
-    if (ok) {
-      setPins((prev) => prev.filter((p) => p.markerId !== markerId));
-    }
-  };
-
-  // Group: 커뮤니티 오픈(바텀시트 + LargeSignBoard)
-   // ✅ 커뮤니티 열 때 서버에서 최신 정보 fetch
-  const openCommunity = async (centerItem) => {
     try {
-      const data = await fetchCenterMarkerCommunity(dummy_id, centerItem.centerMarkerId);
-      setSelectedCenter(centerItem);
-      setSelectedBoard({
-        ...centerItem,
-        likes: data.likeCount,
-        comments: data.comments,
-      });
-      setSubMode("community");
+      const ok = await deleteMarker(markerId);
+      if (ok) {
+        setPins((prev) => prev.filter((p) => p.markerId !== markerId));
+      } else {
+        setError("마커 삭제 실패!");
+      }
     } catch (e) {
-      console.error("커뮤니티 불러오기 실패:", e);
+      console.error("❌ 마커 삭제 실패:", e);
+      setError("마커 삭제 실패!");
     }
   };
 
+  // Community
+  const openCommunity = (centerItem) => {
+    setSelectedCenter(centerItem);
+    setSelectedBoard(centerItem);
+    setSubMode("community");
+  };
   const closeCommunity = () => {
     setSelectedCenter(null);
     setSelectedBoard(null);
     setSubMode("default");
   };
 
-  // 바텀시트 열림 여부는 subMode로 파생
   const sheetOpen = viewMode === "group" && subMode === "community";
 
   return (
@@ -192,13 +186,20 @@ export default function MapPage() {
       {/* 검색창 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
-      {/* 상태 배지 */}
+      {/* 상태/에러 배지 */}
       <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
         <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
           레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
           {viewMode === "individual" && <> · 핀: {pins.length}</>}
         </div>
       </div>
+
+      {/* ✅ 에러 메시지 UI */}
+      {error && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
 
       {/* 지도 */}
       <Map
@@ -209,7 +210,7 @@ export default function MapPage() {
       >
         <MapMarker position={center} />
 
-        {/* Individual/default: 확정 핀 */}
+        {/* Individual/default pins */}
         {viewMode === "individual" &&
           subMode === "default" &&
           pins.map((p) => (
@@ -224,13 +225,14 @@ export default function MapPage() {
                 viewMode="individual"
                 subMode="default"
                 text={p.content}
-                // 삭제 버튼은 userId(더미; 1) 비교 후 조건부로 노출 가능
-                onDelete={p.userId === dummy_id ? () => removePin(p.markerId) : undefined}
+                onDelete={
+                  p.userId === dummy_id ? () => removePin(p.markerId) : undefined
+                }
               />
             </CustomOverlayMap>
           ))}
 
-        {/* Group/default: 서버에서 가져온 centerMarkers */}
+        {/* Group/default markers */}
         {viewMode === "group" &&
           subMode === "default" &&
           centerMarkers.map((gc) => (
@@ -250,16 +252,24 @@ export default function MapPage() {
             </CustomOverlayMap>
           ))}
 
-
-        {/* Individual/adjust: 지도 중심 미리보기 */}
+        {/* Adjust preview */}
         {viewMode === "individual" && subMode === "adjust" && (
-          <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
-            <SmallSignBoard viewMode="individual" subMode="adjust" text={inputText} />
+          <CustomOverlayMap
+            position={center}
+            xAnchor={0.5}
+            yAnchor={1}
+            zIndex={6}
+          >
+            <SmallSignBoard
+              viewMode="individual"
+              subMode="adjust"
+              text={inputText}
+            />
           </CustomOverlayMap>
         )}
       </Map>
 
-      {/* 조정 가이드 십자선 */}
+      {/* Adjust crosshair */}
       {viewMode === "individual" && subMode === "adjust" && (
         <div className="pointer-events-none absolute inset-0 z-20">
           <div className="absolute left-1/2 top-0 -translate-x-1/2 w-px h-full bg-black/20"></div>
@@ -275,7 +285,7 @@ export default function MapPage() {
         />
       )}
 
-      {/* 조정 완료 버튼 */}
+      {/* Adjust 완료 버튼 */}
       {viewMode === "individual" && subMode === "adjust" && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
           <button
@@ -292,7 +302,7 @@ export default function MapPage() {
         <TrafficButton onClick={() => setSubMode("input")} />
       )}
 
-      {/* community 모드: LargeSignBoard + BottomSheet */}
+      {/* Community 모드 */}
       {subMode === "community" && (
         <>
           {selectedBoard && (
@@ -315,19 +325,25 @@ export default function MapPage() {
               <div className="mb-3 space-y-2">
                 <div className="text-sm text-gray-500">
                   centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
-                  {selectedCenter.latitude.toFixed(5)}, {selectedCenter.longitude.toFixed(5)}
+                  {selectedCenter.latitude.toFixed(5)},{" "}
+                  {selectedCenter.longitude.toFixed(5)}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedCenter.keywords.map((k, i) => (
-                    <span key={i} className="rounded-full border px-2 py-0.5 text-xs">
+                    <span
+                      key={i}
+                      className="rounded-full border px-2 py-0.5 text-xs"
+                    >
                       #{k}
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            <CommunityThread userId={dummy_id}
-              centerMarkerId={selectedCenter.centerMarkerId} />
+            <CommunityThread
+              userId={dummy_id}
+              centerMarkerId={selectedCenter.centerMarkerId}
+            />
           </BottomSheet>
         </>
       )}
