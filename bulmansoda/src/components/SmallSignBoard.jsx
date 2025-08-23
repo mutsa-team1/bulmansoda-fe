@@ -102,7 +102,7 @@ export default function SmallSignBoard({
         />
 
         <div className="absolute inset-0 flex items-center justify-center p-1 px-1.5 pb-3.5">
-          {canToggleDelete && showDelete ? (
+          {canToggleDelete && showDelete && onDelete? (
             <DeleteButton onClick={handleDeleteClick} />
           ) : (
             <span

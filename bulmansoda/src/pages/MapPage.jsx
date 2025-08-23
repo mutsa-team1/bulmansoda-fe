@@ -4,12 +4,13 @@ import SearchBar from "../components/SearchBar";
 import SmallSignBoard from "../components/SmallSignBoard";
 import TrafficButton from "../components/TrafficButton";
 import InputSignBoard from "../components/InputSignBoard";
-import usePinsStorage from "../hooks/usePinsStorage";
 import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
 
 import groupDummy from "../data/groupDummy.json";
 import LargeSignBoard from "../components/LargeSignBoard";
+
+import { createMarker, fetchMarkers } from "../api/marker";
 
 export default function MapPage() {
   const [center, setCenter] = useState({
@@ -22,7 +23,7 @@ export default function MapPage() {
   const [subMode, setSubMode] = useState("default"); // individual: default|input|adjust, group: default|community
 
   // Individual 전용 핀
-  const [pins, setPins] = usePinsStorage("traffic_pins_v1"); // [{id, lat, lng, text}]
+  const [pins, setPins] = useState([]); // 서버와동기화
   const [inputText, setInputText] = useState("");
 
   // Group 선택된 센터
@@ -92,17 +93,53 @@ export default function MapPage() {
     setSubMode("adjust");
   };
 
-  // adjust 확정 → 핀 추가
-  const handleAdjustComplete = () => {
-    const id =
-      (crypto?.randomUUID && crypto.randomUUID()) ||
-      `${Date.now()}_${Math.random()}`;
-    setPins((prev) => [
-      ...prev,
-      { id, lat: center.lat, lng: center.lng, text: inputText },
-    ]);
-    setInputText("");
-    setSubMode("default");
+  // ✅ 최초 1회 서버에서 마커 불러오기
+  useEffect(() => {
+    const loadMarkers = async () => {
+      const bounds = {
+        minLat: 33.0,   // 남쪽 (제주도 포함)
+        maxLat: 39.0,   // 북쪽 (휴전선 인근까지)
+        minLng: 124.0,  // 서쪽 (백령도 포함)
+        maxLng: 132.0   // 동쪽 (독도 포함)
+      };
+      try {
+        const markers = await fetchMarkers(bounds);
+        setPins(markers);
+      } catch (e) {
+        console.error("마커 불러오기 실패:", e);
+      }
+    };
+    loadMarkers();
+  }, []);
+
+  // adjust 위치 확정 → 서버에 저장 (POST)
+  const handleAdjustComplete = async () => {
+    try {
+      const markerId = await createMarker({
+        latitude: center.lat,
+        longitude: center.lng,
+        userId: 1,          // MVP에서는 더미 userId
+        content: inputText,
+      });
+
+      // 응답 받은 id로 상태 업데이트
+      setPins((prev) => [
+        ...prev,
+        {
+          markerId,
+          userId: 1,  // 현재는 더미
+          latitude: center.lat,
+          longitude: center.lng,
+          content: inputText,
+        },
+      ]);
+
+      setInputText("");
+      setSubMode("default");
+    } catch (error) {
+      console.error("마커 등록 실패:", error);
+      alert("마커 등록에 실패했습니다.");
+    }
   };
 
   // 핀 삭제
@@ -153,8 +190,8 @@ export default function MapPage() {
           subMode === "default" &&
           pins.map((p) => (
             <CustomOverlayMap
-              key={p.id}
-              position={{ lat: p.lat, lng: p.lng }}
+              key={p.markerId}
+              position={{ lat: p.latitude, lng: p.longitude }}
               xAnchor={0.5}
               yAnchor={1}
               zIndex={5}
@@ -162,8 +199,9 @@ export default function MapPage() {
               <SmallSignBoard
                 viewMode="individual"
                 subMode="default"
-                text={p.text}
-                onDelete={() => removePin(p.id)}
+                text={p.content}
+                // 삭제 버튼은 userId 비교 후 조건부로 노출 가능
+                onDelete={p.userId === 1 ? () => removePin(p.markerId) : undefined}
               />
             </CustomOverlayMap>
           ))}
