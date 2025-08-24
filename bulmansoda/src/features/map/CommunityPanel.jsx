@@ -19,13 +19,15 @@ export default function CommunityPanel({
   return (
     <>
       {selectedBoard && (
-        <LargeSignBoard
-          title={selectedBoard.keywords.join(" ")}
-          initialLikes={selectedBoard.likes ?? 0}
-          userId={dummyId}
-          centerMarkerId={selectedBoard.centerMarkerId}
-          onClose={onClose}
-        />
+        <div className="fixed top-52 left-1/2 -translate-x-1/2 z-[55]">
+          <LargeSignBoard
+            title={selectedBoard.keywords.join(" ")}
+            initialLikes={selectedBoard.likes ?? 0}
+            userId={dummyId}
+            centerMarkerId={selectedBoard.centerMarkerId}
+            onClose={onClose}
+          />
+        </div>
       )}
 
       <BottomSheet
@@ -35,14 +37,14 @@ export default function CommunityPanel({
         initialSnap={1}
         showBackdrop={false}
       >
-        {selectedCenter && (
+        {/* {selectedCenter && (
           <div className="mb-3 space-y-2">
             <div className="text-sm text-gray-500">
               centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
               {selectedCenter.latitude.toFixed(5)},{" "}
               {selectedCenter.longitude.toFixed(5)}
             </div>
-            {/* <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {selectedCenter.keywords.map((k, i) => (
                 <span
                   key={i}
@@ -51,9 +53,9 @@ export default function CommunityPanel({
                   #{k}
                 </span>
               ))}
-            </div> */}
+            </div>
           </div>
-        )}
+        )} */}
 
         {selectedCenter && (
           <CommunityThread

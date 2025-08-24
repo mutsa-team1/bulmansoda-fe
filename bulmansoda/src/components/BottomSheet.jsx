@@ -52,7 +52,7 @@ export default function BottomSheet({
     const arr = snapPoints.map(toPx).sort((a, b) => a - b)
     setSnapPx(arr)
     const initIdx = Math.min(Math.max(0, initialSnap), arr.length - 1)
-    setHeight(arr[initIdx] || 300)
+    setHeight((arr[initIdx] || 300) + 60) 
   }, [snapPoints, initialSnap, toPx])
 
   // ✅ 부모로 height 알려주기
