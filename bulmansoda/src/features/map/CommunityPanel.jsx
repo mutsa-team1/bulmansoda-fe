@@ -42,7 +42,7 @@ export default function CommunityPanel({
               {selectedCenter.latitude.toFixed(5)},{" "}
               {selectedCenter.longitude.toFixed(5)}
             </div>
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
               {selectedCenter.keywords.map((k, i) => (
                 <span
                   key={i}
@@ -51,7 +51,7 @@ export default function CommunityPanel({
                   #{k}
                 </span>
               ))}
-            </div>
+            </div> */}
           </div>
         )}
 
