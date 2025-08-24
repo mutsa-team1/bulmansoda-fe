@@ -10,7 +10,7 @@ import HUD from "../features/map/HUD";
 import CommunityPanel from "../features/map/CommunityPanel";
 import useGeolocation from "../hooks/useGeolocation";
 
-// import currentIcon from "../assets/current-pos.svg";
+import currentIcon from "../assets/current-pos.svg";
 import pinIcon from "../assets/pin.svg";
 
 export default function MapPage() {
@@ -240,7 +240,7 @@ export default function MapPage() {
         }}
       >
         {/* 현재 위치 마커 */}
-        {/* <MapMarker
+        <MapMarker
           zIndex={1}
           position={center}
           image={{
@@ -248,7 +248,7 @@ export default function MapPage() {
             size: { width: 48, height: 48 },
             options: { offset: { x: 24, y: 48 } },
           }}
-        /> */}
+        />
 
         {/* 선택한 핀 */}
         {(subMode === "adjust" || pendingPos) && (
