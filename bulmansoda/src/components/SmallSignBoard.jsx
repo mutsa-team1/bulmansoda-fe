@@ -144,9 +144,9 @@ function DeleteButton({ onClick }) {
       type="button"
       onClick={handleBtnClick}
       className="
-        bg-[#F00000] hover:bg-[#d00000] active:bg-[#a00000]
+        bg-red-500 hover:bg-red-600 active:bg-red-700
         text-white text-xs sm:text-sm md:text-base font-semibold
-        rounded px-3 py-1 focus:outline-none 
+        rounded-lg px-4 py-1.5 mb-1 focus:outline-none 
       "
     >
       삭제
