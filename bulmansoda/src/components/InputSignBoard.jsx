@@ -17,80 +17,6 @@ const InfoIcon = () => (
   </svg>
 );
 
-// 고정 위치 아이콘
-const FixedLocationIcon = () => (
-  <div className="relative w-[43px] h-[43px]">
-    {/* 배경 원 */}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="43"
-      height="43"
-      viewBox="0 0 43 43"
-      fill="none"
-      className="absolute inset-0"
-    >
-      <circle
-        opacity="0.7"
-        cx="21.5"
-        cy="21.5"
-        r="21.5"
-        fill="url(#paint0_linear_288_312)"
-      />
-      <defs>
-        <linearGradient
-          id="paint0_linear_288_312"
-          x1="6.45"
-          y1="6.09167"
-          x2="39.4167"
-          y2="43"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#BBBBBB" />
-          <stop offset="1" stopColor="#D9D9D9" />
-        </linearGradient>
-      </defs>
-    </svg>
-    {/* 중앙 타겟 */}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="23"
-      height="23"
-      viewBox="0 0 23 23"
-      fill="none"
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-    >
-      <path
-        d="M11.4996 5.22949C14.9628 5.22949 17.7709 8.03686 17.7711 11.5C17.7711 14.9633 14.9629 17.7715 11.4996 17.7715C8.0365 17.7713 5.22913 14.9632 5.22913 11.5C5.2293 8.03697 8.03661 5.22967 11.4996 5.22949ZM11.5006 8.8125C10.0165 8.8125 8.81329 10.0159 8.81311 11.5C8.81311 12.9843 10.0163 14.1875 11.5006 14.1875C12.9847 14.1872 14.1881 12.9841 14.1881 11.5C14.1879 10.0161 12.9845 8.81276 11.5006 8.8125Z"
-        fill="#1E1E1E"
-      />
-      <path
-        d="M11.5 5.22917V3.4375"
-        stroke="#1E1E1E"
-        strokeWidth="1.79167"
-        strokeLinecap="round"
-      />
-      <path
-        d="M17.7708 11.5L19.5625 11.5"
-        stroke="#1E1E1E"
-        strokeWidth="1.79167"
-        strokeLinecap="round"
-      />
-      <path
-        d="M11.5 19.5622L11.5 17.7705"
-        stroke="#1E1E1E"
-        strokeWidth="1.79167"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3.43746 11.5H5.22913"
-        stroke="#1E1E1E"
-        strokeWidth="1.79167"
-        strokeLinecap="round"
-      />
-    </svg>
-  </div>
-);
-
 export default function InputSignBoard({ onSubmit, onCancel }) {
   const [text, setText] = useState("");
 
@@ -177,8 +103,6 @@ export default function InputSignBoard({ onSubmit, onCancel }) {
         </button>
       )}
 
-      {/* 고정 위치 아이콘 */}
-      <FixedLocationIcon />
     </div>
   );
 }
