@@ -38,7 +38,12 @@ export default function IndividualPinsLayer({
         ))}
 
       {subMode === "adjust" && (
-        <CustomOverlayMap position={center} xAnchor={0.5} yAnchor={1} zIndex={6}>
+        <CustomOverlayMap
+          position={center}
+          xAnchor={0.5}
+          yAnchor={1.3}
+          zIndex={5}
+        >
           <SmallSignBoard
             viewMode="individual"
             subMode="adjust"
@@ -46,6 +51,7 @@ export default function IndividualPinsLayer({
           />
         </CustomOverlayMap>
       )}
+
     </>
   );
 }
