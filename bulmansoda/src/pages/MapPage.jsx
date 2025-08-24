@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Map, MapMarker } from "react-kakao-maps-sdk";
+import { Map, MapMarker, CustomOverlayMap } from "react-kakao-maps-sdk";
 
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
 import { createMarker, deleteMarker } from "../api/marker";
@@ -23,8 +23,9 @@ export default function MapPage() {
   const [level, setLevel] = useState(3);
   const viewMode = level < 4 ? "individual" : "group";
 
-  // 서브 모드
+  // 모드: default → pending(좌표선택) → input(텍스트작성) → adjust(등록)
   const [subMode, setSubMode] = useState("default");
+  const [pendingPos, setPendingPos] = useState(null);
 
   // 서버 동기화 데이터
   const [pins, setPins] = useState([]);
@@ -39,7 +40,7 @@ export default function MapPage() {
   const inputRef = useRef(null);
   const mapRef = useRef(null);
 
-  // ✅ 현재 위치
+  // 현재 위치
   const { pos, error: geoError } = useGeolocation();
   const initializedRef = useRef(false);
 
@@ -47,25 +48,27 @@ export default function MapPage() {
     if (pos) {
       setCenter({ lat: pos.lat, lng: pos.lng });
       if (!initializedRef.current) {
-        setLevel(3); // 최초 진입 시만 레벨 3으로 세팅
+        setLevel(3);
         initializedRef.current = true;
       }
     }
   }, [pos]);
 
   useEffect(() => {
-    if (geoError) console.warn("위치 불러오기 실패:", geoError.message);
+    if (geoError) console.warn("위치 불러오기 실패:", geoError?.message);
   }, [geoError]);
 
-  // viewMode 전환 시 subMode 정리
+  // viewMode 전환 시 모드 정리
   useEffect(() => {
-    if (viewMode === "group" && ["input", "adjust"].includes(subMode)) {
+    if (viewMode === "group" && ["pending", "input", "adjust"].includes(subMode)) {
       setSubMode("default");
+      setPendingPos(null);
+      setInputText("");
     }
     if (viewMode === "individual" && subMode === "community") {
       setSubMode("default");
     }
-  }, [viewMode]);
+  }, [viewMode, subMode]);
 
   // 데이터 불러오기
   const loadMarkers = async () => {
@@ -102,18 +105,26 @@ export default function MapPage() {
     });
   };
 
-  // 입력 완료 -> adjust
+  // Input 제출 → adjust 전환
   const handleInputComplete = (text) => {
     setInputText(text);
+    if (pendingPos) {
+      setCenter(pendingPos); // adjust 시작 시 center를 선택 좌표로 이동
+    }
     setSubMode("adjust");
   };
 
-  // adjust 완료 -> 서버 저장
+  // adjust 완료 → 서버 저장
   const handleAdjustComplete = async () => {
     try {
+      const targetPos = subMode === "adjust" ? center : pendingPos;
+      if (!targetPos) {
+        setError("핀 위치가 지정되지 않았어요.");
+        return;
+      }
       const markerId = await createMarker({
-        latitude: center.lat,
-        longitude: center.lng,
+        latitude: targetPos.lat,
+        longitude: targetPos.lng,
         userId: dummy_id,
         content: inputText,
       });
@@ -122,12 +133,13 @@ export default function MapPage() {
         {
           markerId,
           userId: dummy_id,
-          latitude: center.lat,
-          longitude: center.lng,
+          latitude: targetPos.lat,
+          longitude: targetPos.lng,
           content: inputText,
         },
       ]);
       setInputText("");
+      setPendingPos(null);
       setSubMode("default");
     } catch (e) {
       console.error("마커 등록 실패:", e);
@@ -150,7 +162,7 @@ export default function MapPage() {
     }
   };
 
-  // 커뮤니티 모드
+  // 커뮤니티
   const openCommunity = (centerItem) => {
     setSelectedCenter(centerItem);
     setSelectedBoard(centerItem);
@@ -162,17 +174,14 @@ export default function MapPage() {
     setSubMode("default");
   };
 
-  // ✅ 맵 이벤트 바인딩
+  // 맵 이벤트 바인딩
   const handleMapCreate = (map) => {
     mapRef.current = map;
     setLevel(map.getLevel());
 
-    // ✅ 줌 변경 이벤트
     window.kakao.maps.event.addListener(map, "zoom_changed", () => {
       setLevel(map.getLevel());
     });
-
-    // ✅ 지도 중심 변경 이벤트 (조건 제거 → 항상 갱신)
     window.kakao.maps.event.addListener(map, "center_changed", () => {
       const c = map.getCenter();
       setCenter({ lat: c.getLat(), lng: c.getLng() });
@@ -181,6 +190,15 @@ export default function MapPage() {
 
   return (
     <div className="relative w-full h-[100dvh]">
+      {/* pending 안내 */}
+      {subMode === "pending" && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+          <div className="bg-black/65 text-white rounded-xl px-4 py-3 shadow-lg text-sm">
+            지도를 탭해 위치를 선택하세요
+          </div>
+        </div>
+      )}
+
       {/* HUD */}
       <HUD
         inputRef={inputRef}
@@ -191,8 +209,16 @@ export default function MapPage() {
         pinsCount={pins.length}
         error={error}
         onClearError={() => setError(null)}
-        onOpenInput={() => setSubMode("input")}
-        onCancelInput={() => setSubMode("default")}
+        onOpenInput={() => {
+          setSubMode("pending");
+          setPendingPos(null);
+          setInputText("");
+        }}
+        onCancelInput={() => {
+          setSubMode("default");
+          setPendingPos(null);
+          setInputText("");
+        }}
         onSubmitInput={handleInputComplete}
         onAdjustConfirm={handleAdjustComplete}
       />
@@ -203,18 +229,48 @@ export default function MapPage() {
         level={level}
         style={{ width: "100%", height: "100%" }}
         onCreate={handleMapCreate}
+        onClick={(_t, mouseEvent) => {
+          if (subMode === "pending") {
+            const latlng = mouseEvent.latLng;
+            const next = { lat: latlng.getLat(), lng: latlng.getLng() };
+            setPendingPos(next);
+            setSubMode("input");
+          }
+        }}
       >
+        {/* 현재 위치 마커 */}
         <MapMarker
-          zIndex={10}
+          zIndex={1}
+          position={center}
           image={{
-            src: currentIcon,   // ✅ public 폴더나 import한 이미지 경로
+            src: currentIcon,
             size: { width: 48, height: 48 },
-            options: { offset: { x: 24, y: 48 } }, // 중심 좌표 기준 offset
-          }} position={center} />
+            options: { offset: { x: 24, y: 48 } },
+          }}
+        />
 
+        {/* 선택한 핀 */}
+        {(subMode === "adjust" || pendingPos) && (
+          <>
+            <CustomOverlayMap
+              position={subMode === "adjust" ? center : pendingPos}
+              xAnchor={0.5}
+              yAnchor={1.15}
+              zIndex={6}
+            >
+              <div className="px-2 py-1 rounded-md border bg-white shadow text-[11px]">
+                {subMode === "adjust"
+                  ? `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`
+                  : `${pendingPos?.lat.toFixed(5)}, ${pendingPos?.lng.toFixed(5)}`}
+              </div>
+            </CustomOverlayMap>
+          </>
+        )}
+
+
+        {/* 기존 마커 레이어 */}
         {viewMode === "individual" ? (
           <IndividualPinsLayer
-            zIndex={5}
             viewMode={viewMode}
             subMode={subMode}
             pins={pins}
@@ -225,7 +281,6 @@ export default function MapPage() {
           />
         ) : (
           <GroupMarkersLayer
-            zIndex={5}
             viewMode={viewMode}
             subMode={subMode}
             centers={centerMarkers}
@@ -233,7 +288,6 @@ export default function MapPage() {
           />
         )}
       </Map>
-
       {/* 커뮤니티 패널 */}
       <CommunityPanel
         open={subMode === "community"}
