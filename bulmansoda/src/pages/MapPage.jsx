@@ -154,7 +154,7 @@ export default function MapPage() {
       if (ok) {
         setPins((prev) => prev.filter((p) => p.markerId !== markerId));
       } else {
-        setError("마커 삭제 실패!");
+        // setError("마커 삭제 실패!");
       }
     } catch (e) {
       console.error("❌ 마커 삭제 실패:", e);
