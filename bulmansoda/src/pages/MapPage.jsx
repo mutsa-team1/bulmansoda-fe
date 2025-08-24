@@ -1,51 +1,94 @@
 import { useEffect, useRef, useState } from "react";
-import { CustomOverlayMap, Map, MapMarker } from "react-kakao-maps-sdk";
-import SearchBar from "../components/SearchBar";
-import SmallSignBoard from "../components/SmallSignBoard";
-import TrafficButton from "../components/TrafficButton";
-import InputSignBoard from "../components/InputSignBoard";
-import BottomSheet from "../components/BottomSheet";
-import CommunityThread from "../components/CommunityThread";
-import LargeSignBoard from "../components/LargeSignBoard";
+import { Map, MapMarker } from "react-kakao-maps-sdk";
 
-import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
+import { createMarker, deleteMarker } from "../api/marker";
+
+import IndividualPinsLayer from "../features/map/IndividualPinsLayer";
+import GroupMarkersLayer from "../features/map/GroupMarkersLayer";
+import HUD from "../features/map/HUD";
+import CommunityPanel from "../features/map/CommunityPanel";
+import useGeolocation from "../hooks/useGeolocation";
+
+import currentIcon from "../assets/current-pos.svg";
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
 
+  // 지도 상태
   const [center, setCenter] = useState({
     lat: 37.46810567643863,
     lng: 127.03924802821535,
-  }); // 기본 위치 (양재 aT 센터)
+  });
   const [level, setLevel] = useState(3);
-
   const viewMode = level < 4 ? "individual" : "group";
+
+  // 서브 모드
   const [subMode, setSubMode] = useState("default");
 
   // 서버 동기화 데이터
   const [pins, setPins] = useState([]);
   const [centerMarkers, setCenterMarkers] = useState([]);
 
-  // 상태 관리
+  // 상태
   const [inputText, setInputText] = useState("");
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState(null);
-  const [error, setError] = useState(null); // ✅ 에러 상태 추가
+  const [error, setError] = useState(null);
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
 
+  // ✅ 현재 위치
+  const { pos, error: geoError } = useGeolocation();
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (pos) {
+      setCenter({ lat: pos.lat, lng: pos.lng });
+      if (!initializedRef.current) {
+        setLevel(3); // 최초 진입 시만 레벨 3으로 세팅
+        initializedRef.current = true;
+      }
+    }
+  }, [pos]);
+
+  useEffect(() => {
+    if (geoError) console.warn("위치 불러오기 실패:", geoError.message);
+  }, [geoError]);
+
   // viewMode 전환 시 subMode 정리
   useEffect(() => {
-    if (viewMode === "group" && (subMode === "input" || subMode === "adjust")) {
+    if (viewMode === "group" && ["input", "adjust"].includes(subMode)) {
       setSubMode("default");
     }
     if (viewMode === "individual" && subMode === "community") {
       setSubMode("default");
     }
-  }, [viewMode, subMode]);
+  }, [viewMode]);
 
+  // 데이터 불러오기
+  const loadMarkers = async () => {
+    const bounds = { minLat: 33.0, maxLat: 39.0, minLng: 124.0, maxLng: 132.0 };
+    try {
+      setError(null);
+      const markers = await fetchMarkers(bounds);
+      setPins(Array.isArray(markers) ? markers : []);
+      const centers = await fetchCenterMarkers(bounds);
+      setCenterMarkers(Array.isArray(centers) ? centers : []);
+    } catch (e) {
+      console.error("❌ 마커 불러오기 실패:", e);
+      setError("서버에서 데이터를 불러오지 못했습니다.");
+      setPins([]);
+      setCenterMarkers([]);
+    }
+  };
+
+  useEffect(() => {
+    loadMarkers();
+  }, [viewMode]);
+
+  // 검색
   const onSearch = () => {
     const q = inputRef.current?.value?.trim();
     if (!q || !window.kakao?.maps?.services) return;
@@ -59,70 +102,13 @@ export default function MapPage() {
     });
   };
 
-  // 최신 모드 참조용
-  const subModeRef = useRef(subMode);
-  const viewModeRef = useRef(viewMode);
-  useEffect(() => {
-    subModeRef.current = subMode;
-  }, [subMode]);
-  useEffect(() => {
-    viewModeRef.current = viewMode;
-  }, [viewMode]);
-
-  // 지도 생성
-  const handleMapCreate = (map) => {
-    mapRef.current = map;
-    setLevel(map.getLevel());
-
-    window.kakao.maps.event.addListener(map, "zoom_changed", () => {
-      setLevel(map.getLevel());
-    });
-
-    window.kakao.maps.event.addListener(map, "center_changed", () => {
-      if (
-        subModeRef.current === "adjust" &&
-        viewModeRef.current === "individual"
-      ) {
-        const c = map.getCenter();
-        setCenter({ lat: c.getLat(), lng: c.getLng() });
-      }
-    });
-  };
-
-  // 입력 완료 → adjust
+  // 입력 완료 -> adjust
   const handleInputComplete = (text) => {
     setInputText(text);
     setSubMode("adjust");
   };
 
-  // 데이터 불러오기
-  const loadMarkers = async () => {
-    const bounds = {
-      minLat: 33.0,
-      maxLat: 39.0,
-      minLng: 124.0,
-      maxLng: 132.0,
-    };
-    try {
-      setError(null);
-      const markers = await fetchMarkers(bounds);
-      setPins(Array.isArray(markers) ? markers : []); // ✅ 안전 처리
-
-      const centers = await fetchCenterMarkers(bounds);
-      setCenterMarkers(Array.isArray(centers) ? centers : []); // ✅ 안전 처리
-    } catch (e) {
-      console.error("❌ 마커 불러오기 실패:", e);
-      setError("서버에서 데이터를 불러오지 못했습니다.");
-      setPins([]); // ✅ fallback 값
-      setCenterMarkers([]); // ✅ fallback 값
-    }
-  };
-  // 최초 + viewMode 변경 시 호출
-  useEffect(() => {
-    loadMarkers();
-  }, [viewMode]);
-
-  // adjust → 서버 저장
+  // adjust 완료 -> 서버 저장
   const handleAdjustComplete = async () => {
     try {
       const markerId = await createMarker({
@@ -131,7 +117,6 @@ export default function MapPage() {
         userId: dummy_id,
         content: inputText,
       });
-
       setPins((prev) => [
         ...prev,
         {
@@ -142,11 +127,10 @@ export default function MapPage() {
           content: inputText,
         },
       ]);
-
       setInputText("");
       setSubMode("default");
-    } catch (error) {
-      console.error("마커 등록 실패:", error);
+    } catch (e) {
+      console.error("마커 등록 실패:", e);
       setError("마커 등록에 실패했습니다.");
     }
   };
@@ -166,7 +150,7 @@ export default function MapPage() {
     }
   };
 
-  // Community
+  // 커뮤니티 모드
   const openCommunity = (centerItem) => {
     setSelectedCenter(centerItem);
     setSelectedBoard(centerItem);
@@ -178,27 +162,40 @@ export default function MapPage() {
     setSubMode("default");
   };
 
-  const sheetOpen = viewMode === "group" && subMode === "community";
+  // ✅ 맵 이벤트 바인딩
+  const handleMapCreate = (map) => {
+    mapRef.current = map;
+    setLevel(map.getLevel());
+
+    // ✅ 줌 변경 이벤트
+    window.kakao.maps.event.addListener(map, "zoom_changed", () => {
+      setLevel(map.getLevel());
+    });
+
+    // ✅ 지도 중심 변경 이벤트 (조건 제거 → 항상 갱신)
+    window.kakao.maps.event.addListener(map, "center_changed", () => {
+      const c = map.getCenter();
+      setCenter({ lat: c.getLat(), lng: c.getLng() });
+    });
+  };
 
   return (
     <div className="relative w-full h-[100dvh]">
-      {/* 검색창 */}
-      <SearchBar ref={inputRef} onSearch={onSearch} />
-
-      {/* 상태/에러 배지 */}
-      <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
-        <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
-          레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
-          {viewMode === "individual" && <> · 핀: {pins.length}</>}
-        </div>
-      </div>
-
-      {/* ✅ 에러 메시지 UI */}
-      {error && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
-          {error}
-        </div>
-      )}
+      {/* HUD */}
+      <HUD
+        inputRef={inputRef}
+        onSearch={onSearch}
+        level={level}
+        viewMode={viewMode}
+        subMode={subMode}
+        pinsCount={pins.length}
+        error={error}
+        onClearError={() => setError(null)}
+        onOpenInput={() => setSubMode("input")}
+        onCancelInput={() => setSubMode("default")}
+        onSubmitInput={handleInputComplete}
+        onAdjustConfirm={handleAdjustComplete}
+      />
 
       {/* 지도 */}
       <Map
@@ -207,145 +204,44 @@ export default function MapPage() {
         style={{ width: "100%", height: "100%" }}
         onCreate={handleMapCreate}
       >
-        <MapMarker position={center} />
+        <MapMarker
+          zIndex={10}
+          image={{
+            src: currentIcon,   // ✅ public 폴더나 import한 이미지 경로
+            size: { width: 48, height: 48 },
+            options: { offset: { x: 24, y: 48 } }, // 중심 좌표 기준 offset
+          }} position={center} />
 
-        {/* Individual/default pins */}
-        {viewMode === "individual" &&
-          subMode === "default" &&
-          pins.map((p) => (
-            <CustomOverlayMap
-              key={p.markerId}
-              position={{ lat: p.latitude, lng: p.longitude }}
-              xAnchor={0.5}
-              yAnchor={1}
-              zIndex={5}
-            >
-              <SmallSignBoard
-                viewMode="individual"
-                subMode="default"
-                text={p.content}
-                onDelete={
-                  p.userId === dummy_id ? () => removePin(p.markerId) : undefined
-                }
-              />
-            </CustomOverlayMap>
-          ))}
-
-        {/* Group/default markers */}
-        {viewMode === "group" &&
-          subMode === "default" &&
-          centerMarkers.map((gc) => (
-            <CustomOverlayMap
-              key={gc.centerMarkerId}
-              position={{ lat: gc.latitude, lng: gc.longitude }}
-              xAnchor={0.5}
-              yAnchor={1}
-              zIndex={5}
-            >
-              <SmallSignBoard
-                viewMode="group"
-                subMode="default"
-                text={gc.keywords.join(" ")}
-                onOpenLarge={() => openCommunity(gc)}
-              />
-            </CustomOverlayMap>
-          ))}
-
-        {/* Adjust preview */}
-        {viewMode === "individual" && subMode === "adjust" && (
-          <CustomOverlayMap
-            position={center}
-            xAnchor={0.5}
-            yAnchor={1}
-            zIndex={6}
-          >
-            <SmallSignBoard
-              viewMode="individual"
-              subMode="adjust"
-              text={inputText}
-            />
-          </CustomOverlayMap>
+        {viewMode === "individual" ? (
+          <IndividualPinsLayer
+            zIndex={5}
+            viewMode={viewMode}
+            subMode={subMode}
+            pins={pins}
+            center={center}
+            inputText={inputText}
+            dummyId={dummy_id}
+            onDelete={removePin}
+          />
+        ) : (
+          <GroupMarkersLayer
+            zIndex={5}
+            viewMode={viewMode}
+            subMode={subMode}
+            centers={centerMarkers}
+            onOpenCommunity={openCommunity}
+          />
         )}
       </Map>
 
-      {/* Adjust crosshair */}
-      {viewMode === "individual" && subMode === "adjust" && (
-        <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-px h-full bg-black/20"></div>
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 h-px w-full bg-black/20"></div>
-        </div>
-      )}
-
-      {/* 입력 모달 */}
-      {viewMode === "individual" && subMode === "input" && (
-        <InputSignBoard
-          onSubmit={handleInputComplete}
-          onCancel={() => setSubMode("default")}
-        />
-      )}
-
-      {/* Adjust 완료 버튼 */}
-      {viewMode === "individual" && subMode === "adjust" && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
-          <button
-            onClick={handleAdjustComplete}
-            className="px-6 py-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl shadow-md"
-          >
-            위치 확정
-          </button>
-        </div>
-      )}
-
-      {/* 신고 버튼 */}
-      {viewMode === "individual" && subMode === "default" && (
-        <TrafficButton onClick={() => setSubMode("input")} />
-      )}
-
-      {/* Community 모드 */}
-      {subMode === "community" && (
-        <>
-          {selectedBoard && (
-            <LargeSignBoard
-              title={selectedBoard.keywords.join(" ")}
-              initialLikes={selectedBoard.likes ?? 0}
-              userId={dummy_id}
-              centerMarkerId={selectedBoard.centerMarkerId}
-              onClose={closeCommunity}
-            />
-          )}
-          <BottomSheet
-            open={sheetOpen}
-            onClose={closeCommunity}
-            snapPoints={[140, "45dvh", "85dvh"]}
-            initialSnap={1}
-            showBackdrop={false}
-          >
-            {selectedCenter && (
-              <div className="mb-3 space-y-2">
-                <div className="text-sm text-gray-500">
-                  centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
-                  {selectedCenter.latitude.toFixed(5)},{" "}
-                  {selectedCenter.longitude.toFixed(5)}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCenter.keywords.map((k, i) => (
-                    <span
-                      key={i}
-                      className="rounded-full border px-2 py-0.5 text-xs"
-                    >
-                      #{k}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <CommunityThread
-              userId={dummy_id}
-              centerMarkerId={selectedCenter.centerMarkerId}
-            />
-          </BottomSheet>
-        </>
-      )}
+      {/* 커뮤니티 패널 */}
+      <CommunityPanel
+        open={subMode === "community"}
+        onClose={closeCommunity}
+        selectedBoard={selectedBoard}
+        selectedCenter={selectedCenter}
+        dummyId={dummy_id}
+      />
     </div>
   );
 }
