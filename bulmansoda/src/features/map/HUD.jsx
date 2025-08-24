@@ -9,10 +9,10 @@ import InputSignBoard from "../../components/InputSignBoard";
 export default function HUD({
   inputRef,
   onSearch,
-  level,
+  // level,
   viewMode,
   subMode,
-  pinsCount,
+  // pinsCount,
   error,
   onClearError, // 선택사항
   onOpenInput,
@@ -26,10 +26,20 @@ export default function HUD({
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
       {/* 상태/에러 배지 */}
-      <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
-        <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
-          레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
-          {viewMode === "individual" && <> · 핀: {pinsCount}</>}
+      <div className="absolute top-2.5 left-2.5 right-2.5 z-20 h-7 pointer-events-none">
+        <div
+          className={`absolute -bottom-11 right-3 
+    ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"} 
+    px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
+        >
+          {viewMode === "individual" ? "📌 개별 마커 모드" : "🗨️ 대표 마커 모드"}
+
+        </div>
+        <div
+          className="absolute -bottom-[66px] right-2.5
+      bg-gray-300/50 py-1 px-0.5 rounded-md shadow text-gray-700 text-[8px] font-bold"
+        >
+          확대/축소하여 모드를 변경하세요.
         </div>
       </div>
 

@@ -115,17 +115,24 @@ export default function CommunityThread({ userId, centerMarkerId }) {
   return (
     <div className="relative mx-auto max-w-md bg-white p-2">
       <div className="pb-20 space-y-1">
-        {comments.map((comment) => (
-          <CommentCard
-            key={comment.commentId}
-            {...comment}
-            onLike={() => handleLike(comment.commentId)}
-            onDelete={() => {
-              setTargetComment(comment);
-              setShowConfirm(true);
-            }}
-          />
-        ))}
+        {comments.length === 0 ? (
+          <div className="text-center text-sm text-gray-500 py-6">
+            첫 번째 댓글을 입력해보세요!
+          </div>
+        ) : (
+          comments.map((comment) => (
+            <CommentCard
+              key={comment.commentId}
+              {...comment}
+              onLike={() => handleLike(comment.commentId)}
+              onDelete={() => {
+                setTargetComment(comment);
+                setShowConfirm(true);
+              }}
+            />
+          ))
+        )}
+
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t border-gray-200 shadow-xl px-3 py-2">
@@ -196,7 +203,9 @@ function CommentCard({ name, content, likeCount, createdAt, isMine, onLike, onDe
       </div>
 
       {/* 본문 */}
-      <p className="my-1.5 ml-1 text-sm">{content}</p>
+
+      <p className="my-1 ml-1 text-sm">{content}</p>
+
 
       {/* 타임스탬프 */}
       <div className="flex justify-between items-center ml-1">

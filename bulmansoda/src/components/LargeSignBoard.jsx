@@ -48,7 +48,8 @@ export default function LargeSignBoard({
     >
       <div
         className="
-          relative w-[300px] h-[200px] p-5 
+          relative w-[280px] h-[180px] p-5 pt-6.5
+
           flex flex-col justify-between
           rounded-[46px]
           bg-gradient-to-br from-[#F00] to-[#FF4949]
@@ -58,7 +59,7 @@ export default function LargeSignBoard({
         {/* 팻말 내용 */}
         <span
           className="
-            text-white text-2xl font-bold
+            text-white text-xl font-bold
             whitespace-pre-wrap break-words mx-0.5
           "
         >
@@ -88,7 +89,7 @@ export default function LargeSignBoard({
       {/* 닫기 버튼 */}
       <button
         onClick={onClose}
-        className="absolute top-3 right-4.5 bg-black/60 hover:bg-black/80 text-white text-sm rounded-full w-7 h-7 flex items-center justify-center"
+        className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white text-xs rounded-full w-7 h-7 flex items-center justify-center"
       >
         X
       </button>

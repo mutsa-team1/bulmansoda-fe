@@ -10,7 +10,8 @@ import HUD from "../features/map/HUD";
 import CommunityPanel from "../features/map/CommunityPanel";
 import useGeolocation from "../hooks/useGeolocation";
 
-import currentIcon from "../assets/current-pos.svg";
+// import currentIcon from "../assets/current-pos.svg";
+import pinIcon from "../assets/pin.svg";
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
@@ -239,7 +240,7 @@ export default function MapPage() {
         }}
       >
         {/* 현재 위치 마커 */}
-        <MapMarker
+        {/* <MapMarker
           zIndex={1}
           position={center}
           image={{
@@ -247,12 +248,13 @@ export default function MapPage() {
             size: { width: 48, height: 48 },
             options: { offset: { x: 24, y: 48 } },
           }}
-        />
+        /> */}
 
         {/* 선택한 핀 */}
         {(subMode === "adjust" || pendingPos) && (
           <>
-            <CustomOverlayMap
+            {/* <CustomOverlayMap
+
               position={subMode === "adjust" ? center : pendingPos}
               xAnchor={0.5}
               yAnchor={1.15}
@@ -263,7 +265,16 @@ export default function MapPage() {
                   ? `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`
                   : `${pendingPos?.lat.toFixed(5)}, ${pendingPos?.lng.toFixed(5)}`}
               </div>
-            </CustomOverlayMap>
+            </CustomOverlayMap> */}
+            <MapMarker
+              position={subMode === "adjust" ? center : pendingPos}
+              image={{
+                src: pinIcon,
+                size: { width: 40, height: 40 },
+                options: { offset: { x: 20, y: 40 } },
+              }}
+              zIndex={6}
+            />
           </>
         )}
 
