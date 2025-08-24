@@ -8,7 +8,6 @@ const SearchBar = forwardRef(function SearchBar({ onSearch }, ref) {
                   flex items-center gap-2
                 bg-white rounded-2xl px-3 pl-3 py-2 shadow-2xl"
     >
-
       <input
         ref={ref}
         className="flex-1 h-10 px-3 rounded-lg  
@@ -25,11 +24,7 @@ const SearchBar = forwardRef(function SearchBar({ onSearch }, ref) {
                     hover:bg-gray-100 active:bg-gray-200  ]"
         aria-label="search"
       >
-        <img
-          src={searchIcon}
-          alt="search"
-          className="h-[30px] w-[30px]"
-        />
+        <img src={searchIcon} alt="search" className="h-[30px] w-[30px]" />
       </button>
     </section>
   );
