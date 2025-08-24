@@ -37,6 +37,7 @@ export default function MapPage() {
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
@@ -116,7 +117,9 @@ export default function MapPage() {
   };
 
   // adjust 완료 → 서버 저장
-  const handleAdjustComplete = async () => {
+    const handleAdjustComplete = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const targetPos = subMode === "adjust" ? center : pendingPos;
       if (!targetPos) {
@@ -145,6 +148,8 @@ export default function MapPage() {
     } catch (e) {
       console.error("마커 등록 실패:", e);
       setError("마커 등록에 실패했습니다.");
+    } finally {
+      setSaving(false); 
     }
   };
 

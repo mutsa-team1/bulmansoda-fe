@@ -13,6 +13,7 @@ export default function HUD({
   viewMode,
   subMode,
   // pinsCount,
+  saving,
   error,
   onClearError, // 선택사항
   onOpenInput,
@@ -72,6 +73,7 @@ export default function HUD({
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
             <button
               onClick={onAdjustConfirm}
+              disabled={saving} 
               className="px-6 py-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl shadow-md"
             >
               위치 확정
