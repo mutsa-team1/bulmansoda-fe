@@ -1,5 +1,5 @@
-import whiteSign from '../assets/whitesign.svg';
-import redSign from '../assets/redsign.svg';
+import whiteSign from '../assets/new-white-sign.svg';
+import redSign from '../assets/new-red-sign.svg';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DeleteConfirmModal from './DeleteConfirmModal';
@@ -82,11 +82,11 @@ export default function SmallSignBoard({
   // ✅ 항상 지도 오버레이 기준(앵커 배치)으로 사용
   const wrapperClass = `
     relative z-20
-    w-[85.393px] h-[62.625px]
-    sm:w-[200px] sm:h-[150px]
-    md:w-[300px] md:h-[220px]
-    lg:w-[400px] lg:h-[300px]
-    xl:w-[500px] xl:h-[375px]
+    w-[180px]
+    sm:w-[200px]
+    md:w-[300px] 
+    lg:w-[400px] 
+    xl:w-[500px] 
     p-0.5 cursor-pointer
   `;
 
@@ -97,22 +97,22 @@ export default function SmallSignBoard({
       <div ref={boardRef} onClick={handleClick} className={`${wrapperClass} ${adjustingRing}`}>
         <img
           src={isIndividual ? whiteSign : redSign}
-          alt="작은 팻말"
+          alt=""
           className="w-full h-full object-contain select-none pointer-events-none"
           draggable={false}
         />
 
-        <div className="absolute inset-0 flex items-center justify-center p-1 px-1.5 pb-3.5">
+        <div className="absolute inset-0 flex items-center justify-center p-2 px-3 pb-3.5">
           {canToggleDelete && showDelete && onDelete ? (
             <DeleteButton onClick={handleDeleteClick} />
           ) : (
             <span
               className={`
-                ${isIndividual ? 'text-black' : 'text-white'}
-                text-[11px] sm:text-xl md:text-2xl font-extrabold text-center
-                leading-tight px-0.5
+                ${isIndividual ? 'text-black text-center' : 'text-white text-left'}
+                text-[15px] sm:text-xl md:text-2xl font-extrabold
+                leading-tight px-0.5 
                 whitespace-pre-wrap break-words [text-wrap:balance]
-                max-w-[100%] max-h-[90%] overflow-hidden
+                max-w-[95%] max-h-[95%] overflow-hidden
               `}
               title={displayText}
             >
