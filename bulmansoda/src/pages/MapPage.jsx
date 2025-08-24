@@ -7,6 +7,7 @@ import InputSignBoard from "../components/InputSignBoard";
 import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
 import LargeSignBoard from "../components/LargeSignBoard";
+import AdjustGuide from "../components/AdjustGuide";
 
 import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
@@ -112,7 +113,7 @@ export default function MapPage() {
       setCenterMarkers(Array.isArray(centers) ? centers : []); // ✅ 안전 처리
     } catch (e) {
       console.error("❌ 마커 불러오기 실패:", e);
-      setError("서버에서 데이터를 불러오지 못했습니다.");
+
       setPins([]); // ✅ fallback 값
       setCenterMarkers([]); // ✅ fallback 값
     }
@@ -147,6 +148,7 @@ export default function MapPage() {
       setSubMode("default");
     } catch (error) {
       console.error("마커 등록 실패:", error);
+      setError("서버에서 데이터를 불러오지 못했습니다.");
       setError("마커 등록에 실패했습니다.");
     }
   };
@@ -192,6 +194,12 @@ export default function MapPage() {
           {viewMode === "individual" && <> · 핀: {pins.length}</>}
         </div>
       </div>
+      {/* ✅ 위치 조정 안내 메시지 */}
+      {viewMode === "individual" && subMode === "input" && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20">
+          <AdjustGuide />
+        </div>
+      )}
 
       {/* ✅ 에러 메시지 UI */}
       {error && (
@@ -213,22 +221,32 @@ export default function MapPage() {
         {viewMode === "individual" &&
           subMode === "default" &&
           pins.map((p) => (
-            <CustomOverlayMap
-              key={p.markerId}
-              position={{ lat: p.latitude, lng: p.longitude }}
-              xAnchor={0.5}
-              yAnchor={1}
-              zIndex={5}
-            >
-              <SmallSignBoard
-                viewMode="individual"
-                subMode="default"
-                text={p.content}
-                onDelete={
-                  p.userId === dummy_id ? () => removePin(p.markerId) : undefined
-                }
+            // ✅ 이 부분을 수정합니다.
+            // key를 각각의 컴포넌트에 부여해야 합니다.
+            <>
+              <MapMarker
+                key={`marker-${p.markerId}`}
+                position={{ lat: p.latitude, lng: p.longitude }}
               />
-            </CustomOverlayMap>
+              <CustomOverlayMap
+                key={`overlay-${p.markerId}`}
+                position={{ lat: p.latitude, lng: p.longitude }}
+                yAnchor={1}
+                xAnchor={0.5}
+                zIndex={10}
+              >
+                <SmallSignBoard
+                  viewMode="individual"
+                  subMode="default"
+                  text={p.content}
+                  onDelete={
+                    p.userId === dummy_id
+                      ? () => removePin(p.markerId)
+                      : undefined
+                  }
+                />
+              </CustomOverlayMap>
+            </>
           ))}
 
         {/* Group/default markers */}
@@ -253,28 +271,20 @@ export default function MapPage() {
 
         {/* Adjust preview */}
         {viewMode === "individual" && subMode === "adjust" && (
-          <CustomOverlayMap
-            position={center}
-            xAnchor={0.5}
-            yAnchor={1}
-            zIndex={6}
-          >
+          <CustomOverlayMap position={center} yAnchor={1} zIndex={10}>
             <SmallSignBoard
               viewMode="individual"
               subMode="adjust"
               text={inputText}
+              // ✅ onCancel 함수를 전달합니다.
+              onCancel={() => {
+                setSubMode("default");
+                setInputText(""); // 작성 중이던 텍스트 초기화
+              }}
             />
           </CustomOverlayMap>
         )}
       </Map>
-
-      {/* Adjust crosshair */}
-      {viewMode === "individual" && subMode === "adjust" && (
-        <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-px h-full bg-black/20"></div>
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 h-px w-full bg-black/20"></div>
-        </div>
-      )}
 
       {/* 입력 모달 */}
       {viewMode === "individual" && subMode === "input" && (
