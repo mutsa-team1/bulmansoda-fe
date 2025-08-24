@@ -254,6 +254,7 @@ export default function MapPage() {
         {(subMode === "adjust" || pendingPos) && (
           <>
             {/* <CustomOverlayMap
+
               position={subMode === "adjust" ? center : pendingPos}
               xAnchor={0.5}
               yAnchor={1.15}

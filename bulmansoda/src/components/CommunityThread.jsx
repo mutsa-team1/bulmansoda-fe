@@ -132,6 +132,7 @@ export default function CommunityThread({ userId, centerMarkerId }) {
             />
           ))
         )}
+
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 bg-white/95 border-t border-gray-200 shadow-xl px-3 py-2">
@@ -202,7 +203,9 @@ function CommentCard({ name, content, likeCount, createdAt, isMine, onLike, onDe
       </div>
 
       {/* 본문 */}
+
       <p className="my-1 ml-1 text-sm">{content}</p>
+
 
       {/* 타임스탬프 */}
       <div className="flex justify-between items-center ml-1">

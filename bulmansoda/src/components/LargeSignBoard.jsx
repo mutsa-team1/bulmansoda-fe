@@ -49,6 +49,7 @@ export default function LargeSignBoard({
       <div
         className="
           relative w-[280px] h-[180px] p-5 pt-6.5
+
           flex flex-col justify-between
           rounded-[46px]
           bg-gradient-to-br from-[#F00] to-[#FF4949]

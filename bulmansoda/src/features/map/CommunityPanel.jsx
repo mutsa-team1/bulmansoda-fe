@@ -37,6 +37,7 @@ export default function CommunityPanel({
         initialSnap={1}
         showBackdrop={false}
       >
+
         {/* {selectedCenter && (
           <div className="mb-3 space-y-2">
             <div className="text-sm text-gray-500">
