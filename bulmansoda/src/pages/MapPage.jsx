@@ -12,7 +12,6 @@ import useGeolocation from "../hooks/useGeolocation";
 
 import pinIcon from "../assets/pin.svg";
 
-// ✅ 픽셀 단위로 지도 중심 이동 (lat/lng → px 이동 → lat/lng)
 const shiftPositionByPixels = (map, lat, lng, dyPx) => {
   if (!map || !window.kakao?.maps) return { lat, lng };
   const proj = map.getProjection();
@@ -33,7 +32,7 @@ export default function MapPage() {
   const [level, setLevel] = useState(3);
   const viewMode = level < 4 ? "individual" : "group";
 
-  // 모드: default → pending(좌표선택) → input(텍스트작성) → adjust(등록)
+  // 모드
   const [subMode, setSubMode] = useState("default");
   const [pendingPos, setPendingPos] = useState(null);
 
@@ -80,6 +79,21 @@ export default function MapPage() {
       setSubMode("default");
     }
   }, [viewMode, subMode]);
+  const toggleMode = () => {
+    if (!mapRef.current) return;
+
+    // 개인 글 모드(레벨 1~3) → 모아 보기 모드(레벨 7)
+    // 모아 보기 모드(레벨 4~) → 개인 글 모드(레벨 3)
+    const targetLevel = viewMode === "individual" ? 7 : 3;
+
+    // Kakao Maps v3: setLevel(level, { animate, anchor })
+    try {
+      mapRef.current.setLevel(targetLevel, { animate: true });
+    } catch {
+      // 혹시 옵션 미지원 버전 대비
+      mapRef.current.setLevel(targetLevel);
+    }
+  };
 
   // 데이터 불러오기
   const loadMarkers = async () => {
@@ -120,7 +134,7 @@ export default function MapPage() {
   const handleInputComplete = (text) => {
     setInputText(text);
     if (pendingPos) {
-      setCenter(pendingPos); // adjust 시작 시 center를 선택 좌표로 이동
+      setCenter(pendingPos);
     }
     setSubMode("adjust");
   };
@@ -201,6 +215,13 @@ export default function MapPage() {
     });
   };
 
+  // ✅ adjust 취소 핸들러
+  const handleCancelAdjust = () => {
+    setSubMode("default");
+    setPendingPos(null);
+    setInputText("");
+  };
+
   return (
     <div className="relative w-full h-[100dvh]">
       {/* pending 안내 */}
@@ -221,6 +242,7 @@ export default function MapPage() {
         subMode={subMode}
         pinsCount={pins.length}
         error={error}
+        saving={saving}
         onClearError={() => setError(null)}
         onOpenInput={() => {
           setSubMode("pending");
@@ -234,6 +256,8 @@ export default function MapPage() {
         }}
         onSubmitInput={handleInputComplete}
         onAdjustConfirm={handleAdjustComplete}
+        onCancelAdjust={handleCancelAdjust}  // ✅ 전달
+        onToggleMode={toggleMode}
       />
 
       {/* 지도 */}
@@ -262,7 +286,7 @@ export default function MapPage() {
           }
         }}
       >
-        {/* 선택한 핀: adjust 모드 제외 */}
+
         {pendingPos && subMode !== "adjust" && (
           <MapMarker
             position={pendingPos}
@@ -285,6 +309,7 @@ export default function MapPage() {
             inputText={inputText}
             dummyId={dummy_id}
             onDelete={removePin}
+            onCancelAdjust={handleCancelAdjust}  // ✅ SmallSignBoard까지 전달
           />
         ) : (
           <GroupMarkersLayer
