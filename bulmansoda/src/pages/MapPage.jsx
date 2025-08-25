@@ -300,6 +300,7 @@ export default function MapPage() {
             viewMode={viewMode}
             subMode={subMode}
             centers={centerMarkers}
+            dummyId={dummy_id}
             onOpenCommunity={openCommunity}
           />
         )}

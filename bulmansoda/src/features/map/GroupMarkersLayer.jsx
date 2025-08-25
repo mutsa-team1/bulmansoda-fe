@@ -8,6 +8,7 @@ export default function GroupMarkersLayer({
   viewMode,
   subMode,
   centers,
+  dummyId,              // ✅ 더미 유저 id 받도록 추가
   onOpenCommunity,
 }) {
   if (viewMode !== "group" || subMode !== "default") return null;
@@ -26,6 +27,8 @@ export default function GroupMarkersLayer({
             viewMode="group"
             subMode="default"
             text={gc.keywords.join(" ")}
+            userId={dummyId}                   // ✅ 항상 dummyId 넘김
+            centerMarkerId={gc.centerMarkerId} // ✅ 공감 API용 id
             onOpenLarge={() => onOpenCommunity(gc)}
           />
         </CustomOverlayMap>

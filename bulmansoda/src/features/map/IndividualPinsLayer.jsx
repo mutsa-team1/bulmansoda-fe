@@ -30,6 +30,8 @@ export default function IndividualPinsLayer({
               viewMode="individual"
               subMode="default"
               text={p.content}
+              userId={p.userId || dummyId}       
+              centerMarkerId={p.centerMarkerId}   
               onDelete={
                 p.userId === dummyId ? () => onDelete(p.markerId) : undefined
               }
@@ -48,10 +50,10 @@ export default function IndividualPinsLayer({
             viewMode="individual"
             subMode="adjust"
             text={inputText}
+            userId={dummyId}   
           />
         </CustomOverlayMap>
       )}
-
     </>
   );
 }
