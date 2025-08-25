@@ -1,22 +1,19 @@
-import whiteSign from '../assets/new-white-sign.svg';
-import redSign from '../assets/new-red-sign.svg';
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import DeleteConfirmModal from './DeleteConfirmModal';
+import whiteSign from "../assets/new-white-sign.svg";
+import redSign from "../assets/new-red-sign.svg";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import { fetchCenterMarkers } from "../api/map";
+import { likeCenterMarker } from "../api/centerMarker";
+import CenterLikeButton from "./CenterLikeButton"; // ✅ 공감 버튼 컴포넌트
 
-/**
- * props
- * - viewMode: "individual" | "group"
- * - subMode : "default" | "input" | "adjust" | "community"
- * - text / message: 표시할 문구
- * - onOpenLarge: group/default에서 클릭 시 호출(Community 진입 등)
- * - onDelete   : individual/default에서 삭제 확정 시 호출(핀 제거 등)
- */
 export default function SmallSignBoard({
-  viewMode = 'individual',
-  subMode = 'default',
+  viewMode = "individual",
+  subMode = "default",
   text,
   message,
+  userId,
+  centerMarkerId,
   onOpenLarge,
   onDelete,
 }) {
@@ -25,22 +22,24 @@ export default function SmallSignBoard({
   const [isDeleted, setIsDeleted] = useState(false);
   const boardRef = useRef(null);
 
-  const isIndividual = viewMode === 'individual';
-  const isAdjusting = isIndividual && subMode === 'adjust';
-  const canToggleDelete = isIndividual && subMode === 'default' && !isAdjusting;
+  const [initialLikes, setInitialLikes] = useState(0); // ✅ 초기 공감 수만 관리
+
+  const isIndividual = viewMode === "individual";
+  const isAdjusting = isIndividual && subMode === "adjust";
+  const canToggleDelete =
+    isIndividual && subMode === "default" && !isAdjusting;
 
   const displayText =
-    (typeof text === 'string' && text) ||
-    (typeof message === 'string' && message) ||
-    '교통사고 삼거리 진입불가';
+    (typeof text === "string" && text) ||
+    (typeof message === "string" && message) ||
+    "교통사고 삼거리 진입불가";
 
   const handleClick = () => {
-    if (isAdjusting) return; // 조정 중에는 동작 없음
-
+    if (isAdjusting) return;
     if (isIndividual) {
-      if (subMode === 'default') setShowDelete((prev) => !prev);
+      if (subMode === "default") setShowDelete((prev) => !prev);
     } else {
-      if (subMode === 'default') onOpenLarge?.(); // 커뮤니티 페이지 전환 등
+      if (subMode === "default") onOpenLarge?.();
     }
   };
 
@@ -60,26 +59,37 @@ export default function SmallSignBoard({
     setShowDelete(false);
   };
 
-  // 바깥 클릭 시 삭제 토글 닫기 (모달 열려있으면 무시)
+  // ✅ 초기 공감 수 불러오기 (bounds 포함)
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showConfirm) return;
-      if (boardRef.current && !boardRef.current.contains(e.target)) {
-        setShowDelete(false);
+    if (!centerMarkerId) return;
+    const loadLikes = async () => {
+      try {
+        const bounds = {
+          minLat: 33.0,
+          maxLat: 39.0,
+          minLng: 124.0,
+          maxLng: 132.0,
+        };
+        const markers = await fetchCenterMarkers(bounds);
+
+        const target = markers.find(
+          (m) => m.centerMarkerId === centerMarkerId
+        );
+
+        console.log("🔎 SmallSignBoard fetch result:", markers, "target:", target);
+
+        if (target) {
+          setInitialLikes(target.likeCount ?? 0);
+        }
+      } catch (e) {
+        console.error("❌ SmallSignBoard 공감 수 불러오기 실패:", e);
       }
     };
-    document.addEventListener('pointerdown', handleClickOutside);
-    return () => document.removeEventListener('pointerdown', handleClickOutside);
-  }, [showConfirm]);
-
-  // 모드 변경 시 삭제 토글 닫기
-  useEffect(() => {
-    setShowDelete(false);
-  }, [viewMode, subMode]);
+    loadLikes();
+  }, [centerMarkerId]);
 
   if (isDeleted) return null;
 
-  // ✅ 항상 지도 오버레이 기준(앵커 배치)으로 사용
   const wrapperClass = `
     relative z-20
     w-[180px]
@@ -90,11 +100,17 @@ export default function SmallSignBoard({
     p-0.5 cursor-pointer
   `;
 
-  const adjustingRing = isAdjusting ? 'ring-2 ring-red-400 ring-offset-2 animate-pulse' : '';
+  const adjustingRing = isAdjusting
+    ? "ring-2 ring-red-400 ring-offset-2 animate-pulse"
+    : "";
 
   return (
     <>
-      <div ref={boardRef} onClick={handleClick} className={`${wrapperClass} ${adjustingRing}`}>
+      <div
+        ref={boardRef}
+        onClick={handleClick}
+        className={`${wrapperClass} ${adjustingRing}`}
+      >
         <img
           src={isIndividual ? whiteSign : redSign}
           alt=""
@@ -107,8 +123,9 @@ export default function SmallSignBoard({
             <DeleteButton onClick={handleDeleteClick} />
           ) : (
             <span
-              className={`
-                ${isIndividual ? 'text-black text-center' : 'text-white text-left'}
+              className={`${
+                isIndividual ? "text-black text-center" : "text-white text-left"
+              }
                 text-[15px] sm:text-xl md:text-2xl font-extrabold
                 leading-tight px-0.5 
                 whitespace-pre-wrap break-words [text-wrap:balance]
@@ -120,6 +137,18 @@ export default function SmallSignBoard({
             </span>
           )}
         </div>
+
+        {/* ✅ 그룹 모드에서만 공감 버튼 */}
+        {!isIndividual && (
+          <div className="absolute bottom-2.5 right-2.5">
+            <CenterLikeButton
+              initialLikes={initialLikes}
+              onLike={() =>
+                likeCenterMarker({ userId, centerMarkerId })
+              }
+            />
+          </div>
+        )}
       </div>
 
       {showConfirm &&

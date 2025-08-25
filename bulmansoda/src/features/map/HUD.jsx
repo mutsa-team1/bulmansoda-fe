@@ -40,7 +40,7 @@ export default function HUD({
           className="absolute -bottom-[66px] right-2.5
       bg-gray-300/50 py-1 px-0.5 rounded-md shadow text-gray-700 text-[8px] font-bold"
         >
-          확대/축소하여 모드를 변경하세요.
+          * 확대/축소하여 모드를 변경하세요.
         </div>
       </div>
 
