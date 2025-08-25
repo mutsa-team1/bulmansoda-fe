@@ -41,7 +41,7 @@ export default function HUD({
         <button
           type="button"
           onClick={onToggleMode}
-          className={`absolute -bottom-11 right-3 pointer-events-auto shadow-md
+          className={`absolute -bottom-11 right-3 pointer-events-auto shadow-md shadow-gray-500
             ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"}
             px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
           aria-label={
