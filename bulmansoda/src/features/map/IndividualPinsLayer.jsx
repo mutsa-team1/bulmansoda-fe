@@ -43,7 +43,7 @@ export default function IndividualPinsLayer({
         <CustomOverlayMap
           position={center}
           xAnchor={0.5}
-          yAnchor={1.3}
+          yAnchor={1}
           zIndex={5}
         >
           <SmallSignBoard
