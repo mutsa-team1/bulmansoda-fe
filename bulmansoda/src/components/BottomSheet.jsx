@@ -63,15 +63,26 @@ export default function BottomSheet({
   }, [height, open, onHeightChange])
 
   useEffect(() => {
-    if (!open) return
     recalcSnap()
-    const onResize = () => recalcSnap()
-    window.addEventListener("resize", onResize)
-    window.visualViewport?.addEventListener("resize", onResize)
-    return () => {
-      window.removeEventListener("resize", onResize)
-      window.visualViewport?.removeEventListener("resize", onResize)
+
+  //  모바일 키보드 대응: visualViewport.resize 무시
+  const onResize = () => {
+    // 키보드 열렸는지 확인
+    const vh = window.visualViewport?.height || window.innerHeight
+    const full = window.innerHeight
+    const keyboardOpen = full - vh > 150 // 150px 이상 줄면 키보드로 판단
+
+    if (!keyboardOpen) {
+      recalcSnap()
     }
+  }
+
+  window.addEventListener("resize", onResize)
+  window.visualViewport?.addEventListener("resize", onResize)
+  return () => {
+    window.removeEventListener("resize", onResize)
+    window.visualViewport?.removeEventListener("resize", onResize)
+  }
   }, [open, recalcSnap])
 
   const addDragListeners = useCallback(() => {
