@@ -12,7 +12,6 @@ import useGeolocation from "../hooks/useGeolocation";
 
 import pinIcon from "../assets/pin.svg";
 
-// ✅ 픽셀 단위로 지도 중심 이동
 const shiftPositionByPixels = (map, lat, lng, dyPx) => {
   if (!map || !window.kakao?.maps) return { lat, lng };
   const proj = map.getProjection();
@@ -287,7 +286,7 @@ export default function MapPage() {
           }
         }}
       >
-        {/* 선택한 핀 */}
+
         {pendingPos && subMode !== "adjust" && (
           <MapMarker
             position={pendingPos}
@@ -322,6 +321,7 @@ export default function MapPage() {
           />
         )}
       </Map>
+
 
       {/* 커뮤니티 패널 */}
       <CommunityPanel
