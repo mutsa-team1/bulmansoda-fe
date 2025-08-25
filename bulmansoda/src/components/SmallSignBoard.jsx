@@ -1,5 +1,5 @@
 import whiteSign from "../assets/new-white-sign.svg";
-import redSign from "../assets/new-red-sign.svg";
+import redSign from "../assets/final-red-sign.svg";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import DeleteConfirmModal from "./DeleteConfirmModal";
@@ -124,12 +124,12 @@ export default function SmallSignBoard({
           ) : (
             <span
               className={`${
-                isIndividual ? "text-black text-center" : "text-white text-left"
+                isIndividual ? "text-black text-center max-h-[95%]" : "text-white text-left pl-2 pb-12 max-h-[80%]"
               }
                 text-[15px] sm:text-xl md:text-2xl font-extrabold
                 leading-tight px-0.5 
                 whitespace-pre-wrap break-words [text-wrap:balance]
-                max-w-[95%] max-h-[95%] overflow-hidden
+                max-w-[95%] overflow-hidden
               `}
               title={displayText}
             >
@@ -140,7 +140,7 @@ export default function SmallSignBoard({
 
         {/* ✅ 그룹 모드에서만 공감 버튼 */}
         {!isIndividual && (
-          <div className="absolute bottom-2.5 right-2.5">
+          <div className="absolute bottom-5.5 right-3">
             <CenterLikeButton
               initialLikes={initialLikes}
               onLike={() =>
