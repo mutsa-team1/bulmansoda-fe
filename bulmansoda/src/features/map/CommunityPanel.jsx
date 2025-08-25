@@ -21,7 +21,8 @@ export default function CommunityPanel({
       {selectedBoard && (
         <div className="fixed top-52 left-1/2 -translate-x-1/2 z-[55]">
           <LargeSignBoard
-            title={selectedBoard.keywords.join(" ")}
+            // title={selectedBoard.keywords.join(" ")}
+            title={selectedBoard.keywords.map((k) => `#${k}`).join(" ")}
             initialLikes={selectedBoard.likes ?? 0}
             userId={dummyId}
             centerMarkerId={selectedBoard.centerMarkerId}
