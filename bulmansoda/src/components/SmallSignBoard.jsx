@@ -101,7 +101,7 @@ export default function SmallSignBoard({
   `;
 
   const adjustingRing = isAdjusting
-    ? "ring-2 ring-red-400 ring-offset-2 animate-pulse"
+    ? "animate-pulse"
     : "";
 
   return (

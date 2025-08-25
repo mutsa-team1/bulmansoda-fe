@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Map, MapMarker, CustomOverlayMap } from "react-kakao-maps-sdk";
+import { Map, MapMarker } from "react-kakao-maps-sdk";
 
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
 import { createMarker, deleteMarker } from "../api/marker";
@@ -10,8 +10,17 @@ import HUD from "../features/map/HUD";
 import CommunityPanel from "../features/map/CommunityPanel";
 import useGeolocation from "../hooks/useGeolocation";
 
-// import currentIcon from "../assets/current-pos.svg";
 import pinIcon from "../assets/pin.svg";
+
+// ✅ 픽셀 단위로 지도 중심 이동 (lat/lng → px 이동 → lat/lng)
+const shiftPositionByPixels = (map, lat, lng, dyPx) => {
+  if (!map || !window.kakao?.maps) return { lat, lng };
+  const proj = map.getProjection();
+  const point = proj.pointFromCoords(new window.kakao.maps.LatLng(lat, lng));
+  const shifted = new window.kakao.maps.Point(point.x, point.y + dyPx);
+  const newLatLng = proj.coordsFromPoint(shifted);
+  return { lat: newLatLng.getLat(), lng: newLatLng.getLng() };
+};
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
@@ -159,8 +168,6 @@ export default function MapPage() {
       const ok = await deleteMarker(markerId);
       if (ok) {
         setPins((prev) => prev.filter((p) => p.markerId !== markerId));
-      } else {
-        // setError("마커 삭제 실패!");
       }
     } catch (e) {
       console.error("❌ 마커 삭제 실패:", e);
@@ -236,53 +243,37 @@ export default function MapPage() {
         style={{ width: "100%", height: "100%" }}
         onCreate={handleMapCreate}
         onClick={(_t, mouseEvent) => {
-          if (subMode === "pending") {
+          if (subMode === "pending" && mapRef.current) {
             const latlng = mouseEvent.latLng;
             const next = { lat: latlng.getLat(), lng: latlng.getLng() };
             setPendingPos(next);
+
+            const mapDiv = mapRef.current.getNode();
+            const quarterHeight = mapDiv.offsetHeight / 4;
+            const shifted = shiftPositionByPixels(
+              mapRef.current,
+              next.lat,
+              next.lng,
+              -quarterHeight
+            );
+            setCenter(shifted);
+
             setSubMode("input");
           }
         }}
       >
-        {/* 현재 위치 마커 */}
-        {/* <MapMarker
-          zIndex={1}
-          position={center}
-          image={{
-            src: currentIcon,
-            size: { width: 48, height: 48 },
-            options: { offset: { x: 24, y: 48 } },
-          }}
-        /> */}
-
-        {/* 선택한 핀 */}
-        {(subMode === "adjust" || pendingPos) && (
-          <>
-            {/* <CustomOverlayMap
-
-              position={subMode === "adjust" ? center : pendingPos}
-              xAnchor={0.5}
-              yAnchor={1.15}
-              zIndex={6}
-            >
-              <div className="px-2 py-1 rounded-md border bg-white shadow text-[11px]">
-                {subMode === "adjust"
-                  ? `${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}`
-                  : `${pendingPos?.lat.toFixed(5)}, ${pendingPos?.lng.toFixed(5)}`}
-              </div>
-            </CustomOverlayMap> */}
-            <MapMarker
-              position={subMode === "adjust" ? center : pendingPos}
-              image={{
-                src: pinIcon,
-                size: { width: 40, height: 40 },
-                options: { offset: { x: 20, y: 40 } },
-              }}
-              zIndex={6}
-            />
-          </>
+        {/* 선택한 핀: adjust 모드 제외 */}
+        {pendingPos && subMode !== "adjust" && (
+          <MapMarker
+            position={pendingPos}
+            image={{
+              src: pinIcon,
+              size: { width: 40, height: 40 },
+              options: { offset: { x: 20, y: 40 } },
+            }}
+            zIndex={6}
+          />
         )}
-
 
         {/* 기존 마커 레이어 */}
         {viewMode === "individual" ? (
@@ -305,6 +296,8 @@ export default function MapPage() {
           />
         )}
       </Map>
+
+
       {/* 커뮤니티 패널 */}
       <CommunityPanel
         open={subMode === "community"}
