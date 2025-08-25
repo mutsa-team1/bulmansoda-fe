@@ -98,10 +98,6 @@ export default function SmallSignBoard({
     p-0.5 cursor-pointer
   `;
 
-  const adjustingRing = isAdjusting
-    ? "animate-pulse"
-    : "";
-
   return (
     <>
       <div

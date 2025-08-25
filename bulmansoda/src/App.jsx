@@ -18,19 +18,27 @@ export default function App() {
     }
   }, []);
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem("bulmansoda_user");
-  //   setUser(null);
-  // };
+  // ✅ 로그아웃 핸들러
+  const handleLogout = () => {
+    localStorage.removeItem("bulmansoda_user"); // 저장된 유저 삭제
+    setUser(null); // 상태 초기화 → LoginPage 로 이동
+  };
 
   return (
     <div className="w-screen h-[100dvh]">
       {user ? (
         <div className="w-full h-full">
-          {/* 필요 시 상단에 간단한 유저 표시/로그아웃 버튼 */}
-          {/* <div className="absolute right-3 top-3 z-50 text-sm bg-white/90 px-3 py-1 rounded-full shadow">
-            {user.name} · <button onClick={handleLogout}>로그아웃</button>
-          </div> */}
+          {/* ✅ 상단에 유저 이름 + 로그아웃 버튼 */}
+          <div className="absolute left-3 top-15 z-50 text-md bg-white/60 px-3 py-1 rounded-xl shadow">
+            {/* {user.name}: {" "} */}
+            <button
+              onClick={handleLogout}
+              className="text-black-400 font-semibold hover:underline"
+            >
+              🔚로그아웃
+            </button>
+          </div>
+
           <MapPage userId={user.id} onLoginSuccess={setUser} />
         </div>
       ) : (
@@ -40,4 +48,3 @@ export default function App() {
     </div>
   );
 }
-
