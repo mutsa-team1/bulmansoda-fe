@@ -90,7 +90,7 @@ export default function SmallSignBoard({
 
   const wrapperClass = `
     relative z-20
-    w-[180px]
+    w-[160px]
     sm:w-[200px]
     md:w-[300px] 
     lg:w-[400px] 
