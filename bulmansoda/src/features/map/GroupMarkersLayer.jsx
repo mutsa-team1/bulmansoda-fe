@@ -26,7 +26,8 @@ export default function GroupMarkersLayer({
           <SmallSignBoard
             viewMode="group"
             subMode="default"
-            text={gc.keywords.join(" ")}
+            // text={gc.keywords.join(" ")}
+            text={gc.keywords.map((k) => `#${k}`).join(" ")}
             userId={dummyId}                   // ✅ 항상 dummyId 넘김
             centerMarkerId={gc.centerMarkerId} // ✅ 공감 API용 id
             onOpenLarge={() => onOpenCommunity(gc)}
