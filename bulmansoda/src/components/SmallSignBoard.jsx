@@ -131,6 +131,7 @@ export default function SmallSignBoard({
 
   return (
     <>
+<<<<<<< Updated upstream
       <div
         ref={boardRef}
         onClick={handleClick}
@@ -144,6 +145,30 @@ export default function SmallSignBoard({
               type="button"
               onClick={handleDeleteClick}
               className="bg-[#F00000] hover:bg-[#d00000] text-white font-semibold rounded px-4 py-1.5"
+=======
+      <div ref={boardRef} onClick={handleClick} className={`${wrapperClass} ${adjustingRing}`}>
+        <img
+          src={isIndividual ? whiteSign : redSign}
+          alt=""
+          className="w-full h-full object-contain select-none pointer-events-none"
+          draggable={false}
+        />
+
+        <div className="absolute inset-0 flex items-center justify-center p-2 px-3 pb-3.5">
+          {canToggleDelete && showDelete && onDelete ? (
+            <DeleteButton onClick={handleDeleteClick} />
+          ) : (
+            <span
+              className={`
+                ${isIndividual ? 'text-black text-center' : 'text-white text-left'}
+                text-[15px] sm:text-xl md:text-2xl font-extrabold
+                leading-tight px-0.5 
+                whitespace-pre-wrap break-words [text-wrap:balance]
+                max-w-[95%] max-h-[95%] overflow-hidden
+                font-sans 
+              `}
+              title={displayText}
+>>>>>>> Stashed changes
             >
               삭제
             </button>
@@ -184,4 +209,28 @@ export default function SmallSignBoard({
         )}
     </>
   );
+<<<<<<< Updated upstream
+=======
+}
+
+function DeleteButton({ onClick }) {
+  const handleBtnClick = (e) => {
+    e.stopPropagation();
+    onClick?.(e);
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleBtnClick}
+      className="
+        bg-red-500 hover:bg-red-600 active:bg-red-700
+        text-white text-xs sm:text-sm md:text-base font-semibold
+        rounded-lg px-4 py-1.5 mb-1 focus:outline-none
+        font-sans  
+      "
+    >
+      삭제
+    </button>
+  );
+>>>>>>> Stashed changes
 }

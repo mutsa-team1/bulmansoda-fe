@@ -8,9 +8,23 @@ import BottomSheet from "../components/BottomSheet";
 import CommunityThread from "../components/CommunityThread";
 import LargeSignBoard from "../components/LargeSignBoard";
 import AdjustGuide from "../components/AdjustGuide";
+<<<<<<< Updated upstream
 
 import { createMarker, deleteMarker } from "../api/marker";
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
+=======
+import pinIcon from "../assets/pin.svg"; // 위치 조정 핀 아이콘
+
+import { createMarker, deleteMarker } from "../api/marker";
+import { fetchCenterMarkers, fetchMarkers } from "../api/map";
+
+// 화면 중앙에 표시될 고정 핀 아이콘 컴포넌트
+const CenterPin = () => (
+  <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+    <img src={pinIcon} alt="위치 지정 핀" className="w-10 h-10" />
+  </div>
+);
+>>>>>>> Stashed changes
 
 export default function MapPage() {
   const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
@@ -24,22 +38,34 @@ export default function MapPage() {
   const viewMode = level < 4 ? "individual" : "group";
   const [subMode, setSubMode] = useState("default");
 
-  // 서버 동기화 데이터
   const [pins, setPins] = useState([]);
   const [centerMarkers, setCenterMarkers] = useState([]);
 
+<<<<<<< Updated upstream
   // 상태 관리
   const [inputText, setInputText] = useState("");
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [error, setError] = useState(null); // ✅ 에러 상태 추가
+=======
+  // ✅ 위치 확정 후 좌표를 저장할 새로운 상태
+  const [confirmedPosition, setConfirmedPosition] = useState(null);
+  const [selectedCenter, setSelectedCenter] = useState(null);
+  const [selectedBoard, setSelectedBoard] = useState(null);
+  const [error, setError] = useState(null);
+>>>>>>> Stashed changes
 
   const inputRef = useRef(null);
   const mapRef = useRef(null);
 
+<<<<<<< Updated upstream
   // viewMode 전환 시 subMode 정리
   useEffect(() => {
     if (viewMode === "group" && (subMode === "input" || subMode === "adjust")) {
+=======
+  useEffect(() => {
+    if (viewMode === "group" && (subMode === "adjust" || subMode === "input")) {
+>>>>>>> Stashed changes
       setSubMode("default");
     }
     if (viewMode === "individual" && subMode === "community") {
@@ -60,7 +86,10 @@ export default function MapPage() {
     });
   };
 
+<<<<<<< Updated upstream
   // 최신 모드 참조용
+=======
+>>>>>>> Stashed changes
   const subModeRef = useRef(subMode);
   const viewModeRef = useRef(viewMode);
   useEffect(() => {
@@ -69,6 +98,7 @@ export default function MapPage() {
   useEffect(() => {
     viewModeRef.current = viewMode;
   }, [viewMode]);
+<<<<<<< Updated upstream
 
   // 지도 생성
   const handleMapCreate = (map) => {
@@ -181,9 +211,99 @@ export default function MapPage() {
   };
 
   const sheetOpen = viewMode === "group" && subMode === "community";
+=======
+
+  const handleMapCreate = (map) => {
+    mapRef.current = map;
+    setLevel(map.getLevel());
+
+    window.kakao.maps.event.addListener(map, "zoom_changed", () => {
+      setLevel(map.getLevel());
+    });
+
+    // ✅ 'adjust' 모드일 때 지도가 움직이면 중앙 좌표를 상태에 반영합니다.
+    window.kakao.maps.event.addListener(map, "center_changed", () => {
+      if (
+        subModeRef.current === "adjust" &&
+        viewModeRef.current === "individual"
+      ) {
+        const c = map.getCenter();
+        setCenter({ lat: c.getLat(), lng: c.getLng() });
+      }
+    });
+  };
+>>>>>>> Stashed changes
+
+  // ✅ 2단계: 위치 확정
+  const handleAdjustComplete = () => {
+    setConfirmedPosition(center); // 현재 중앙 좌표를 확정된 위치로 저장
+    setSubMode("input"); // 다음 단계(글 쓰기)로 전환
+  };
+
+  // ✅ 3단계: 글 작성 완료 및 핀 생성
+  const handleCreatePin = async (text) => {
+    if (!confirmedPosition) return; // 확정된 위치가 없으면 실행 중지
+
+    // 백엔드 연동 전 임시 로직
+    const newPin = {
+      markerId: Date.now(),
+      userId: dummy_id,
+      latitude: confirmedPosition.lat, // 확정된 위치의 위도 사용
+      longitude: confirmedPosition.lng, // 확정된 위치의 경도 사용
+      content: text,
+    };
+    setPins((prev) => [...prev, newPin]);
+
+    // 상태 초기화
+    setSubMode("default");
+    setConfirmedPosition(null);
+  };
+
+  const loadMarkers = async () => {
+    try {
+      setError(null);
+      const markers = await fetchMarkers({});
+      setPins(Array.isArray(markers) ? markers : []);
+      const centers = await fetchCenterMarkers({});
+      setCenterMarkers(Array.isArray(centers) ? centers : []);
+    } catch (e) {
+      console.error("❌ 마커 불러오기 실패:", e);
+      setPins([]);
+      setCenterMarkers([]);
+    }
+  };
+
+  useEffect(() => {
+    loadMarkers();
+  }, [viewMode]);
+
+  const removePin = async (markerId) => {
+    try {
+      await deleteMarker(markerId);
+      setPins((prev) => prev.filter((p) => p.markerId !== markerId));
+    } catch (e) {
+      console.error("❌ 마커 삭제 실패:", e);
+      setError("마커 삭제 실패!");
+    }
+  };
+
+  const openCommunity = (centerItem) => {
+    setSelectedCenter(centerItem);
+    setSelectedBoard(centerItem);
+    setSubMode("community");
+  };
+
+  const closeCommunity = () => {
+    setSelectedCenter(null);
+    setSelectedBoard(null);
+    setSubMode("default");
+  };
+
+  const sheetOpen = viewMode === "group" && subMode === "community";
 
   return (
     <div className="relative w-full h-[100dvh]">
+<<<<<<< Updated upstream
       {/* 검색창 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
@@ -209,12 +329,31 @@ export default function MapPage() {
       )}
 
       {/* 지도 */}
+=======
+      <SearchBar ref={inputRef} onSearch={onSearch} />
+      <div className="absolute top-3 left-3 right-3 z-20 h-14 pointer-events-none">
+        <div className="absolute -bottom-11 right-3 bg-amber-300/95 px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold">
+          레벨: {level} · viewMode: {viewMode} · subMode: {subMode}
+        </div>
+      </div>
+      {viewMode === "individual" && subMode === "adjust" && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20">
+          <AdjustGuide />
+        </div>
+      )}
+      {error && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
+>>>>>>> Stashed changes
       <Map
         center={center}
         level={level}
         style={{ width: "100%", height: "100%" }}
         onCreate={handleMapCreate}
       >
+<<<<<<< Updated upstream
         <MapMarker position={center} />
 
         {/* Individual/default pins */}
@@ -228,6 +367,13 @@ export default function MapPage() {
                 key={`marker-${p.markerId}`}
                 position={{ lat: p.latitude, lng: p.longitude }}
               />
+=======
+        {viewMode === "individual" &&
+          subMode === "default" &&
+          pins.map((p) => (
+            <>
+              
+>>>>>>> Stashed changes
               <CustomOverlayMap
                 key={`overlay-${p.markerId}`}
                 position={{ lat: p.latitude, lng: p.longitude }}
@@ -236,8 +382,11 @@ export default function MapPage() {
                 zIndex={10}
               >
                 <SmallSignBoard
+<<<<<<< Updated upstream
                   viewMode="individual"
                   subMode="default"
+=======
+>>>>>>> Stashed changes
                   text={p.content}
                   onDelete={
                     p.userId === dummy_id
@@ -248,8 +397,11 @@ export default function MapPage() {
               </CustomOverlayMap>
             </>
           ))}
+<<<<<<< Updated upstream
 
         {/* Group/default markers */}
+=======
+>>>>>>> Stashed changes
         {viewMode === "group" &&
           subMode === "default" &&
           centerMarkers.map((gc) => (
@@ -262,12 +414,16 @@ export default function MapPage() {
             >
               <SmallSignBoard
                 viewMode="group"
+<<<<<<< Updated upstream
                 subMode="default"
+=======
+>>>>>>> Stashed changes
                 text={gc.keywords.join(" ")}
                 onOpenLarge={() => openCommunity(gc)}
               />
             </CustomOverlayMap>
           ))}
+<<<<<<< Updated upstream
 
         {/* Adjust preview */}
         {viewMode === "individual" && subMode === "adjust" && (
@@ -312,12 +468,50 @@ export default function MapPage() {
       )}
 
       {/* Community 모드 */}
+=======
+      </Map>
+
+      {/* ✅ 1단계: 알리기 버튼 누르면 'adjust' 모드로 변경 */}
+      {viewMode === "individual" && subMode === "default" && (
+        <TrafficButton onClick={() => setSubMode("adjust")} />
+      )}
+
+      {/* ✅ 2단계: 위치 확정 */}
+      {viewMode === "individual" && subMode === "adjust" && (
+        <>
+          <CenterPin />
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+            <button
+              onClick={handleAdjustComplete}
+              className="px-8 py-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-full shadow-lg"
+            >
+              위치 확정
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ✅ 3단계: 글 쓰기 */}
+      {viewMode === "individual" && subMode === "input" && (
+        <InputSignBoard
+          onSubmit={handleCreatePin}
+          onCancel={() => {
+            setSubMode("default");
+            setConfirmedPosition(null);
+          }}
+        />
+      )}
+
+>>>>>>> Stashed changes
       {subMode === "community" && (
         <>
           {selectedBoard && (
             <LargeSignBoard
               title={selectedBoard.keywords.join(" ")}
+<<<<<<< Updated upstream
               initialLikes={selectedBoard.likes ?? 0}
+=======
+>>>>>>> Stashed changes
               userId={dummy_id}
               centerMarkerId={selectedBoard.centerMarkerId}
               onClose={closeCommunity}
@@ -331,6 +525,7 @@ export default function MapPage() {
             showBackdrop={false}
           >
             {selectedCenter && (
+<<<<<<< Updated upstream
               <div className="mb-3 space-y-2">
                 <div className="text-sm text-gray-500">
                   centerId: <b>{selectedCenter.centerMarkerId}</b> ·{" "}
@@ -353,9 +548,17 @@ export default function MapPage() {
               userId={dummy_id}
               centerMarkerId={selectedCenter.centerMarkerId}
             />
+=======
+              <CommunityThread
+                userId={dummy_id}
+                centerMarkerId={selectedCenter.centerMarkerId}
+              />
+            )}
+>>>>>>> Stashed changes
           </BottomSheet>
         </>
       )}
     </div>
   );
 }
+
