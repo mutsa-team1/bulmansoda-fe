@@ -17,10 +17,10 @@ export default function App() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("bulmansoda_user");
-    setUser(null);
-  };
+  // const handleLogout = () => {
+  //   localStorage.removeItem("bulmansoda_user");
+  //   setUser(null);
+  // };
 
   return (
     <div className="w-screen h-[100dvh]">

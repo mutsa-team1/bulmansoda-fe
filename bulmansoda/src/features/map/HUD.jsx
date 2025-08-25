@@ -20,6 +20,7 @@ export default function HUD({
   onCancelInput,
   onSubmitInput,
   onAdjustConfirm,
+  onToggleMode,
 }) {
   return (
     <>
@@ -28,14 +29,30 @@ export default function HUD({
 
       {/* 상태/에러 배지 */}
       <div className="absolute top-2.5 left-2.5 right-2.5 z-20 h-7 pointer-events-none">
-        <div
+        {/* <button
+          type="button"
+          onClick={onToggleMode}
           className={`absolute -bottom-11 right-3 
     ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"} 
     px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
         >
           {viewMode === "individual" ? "📌 개별 마커 모드" : "🗨️ 대표 마커 모드"}
 
-        </div>
+        </button> */}
+        <button
+          type="button"
+          onClick={onToggleMode}
+          className={`absolute -bottom-11 right-3 pointer-events-auto
+            ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"}
+            px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
+          aria-label={
+            viewMode === "individual" ? "모아 보기 모드로 전환" : "개인 글 모드로 전환"
+          }
+          title={viewMode === "individual" ? "모아 보기 모드로 전환" : "개인 글 모드로 전환"}
+        >
+          {viewMode === "individual" ? "📌 개인 글 모드" : "🌐 모아 보기 모드"}
+        </button>
+        
         <div
           className="absolute -bottom-[66px] right-2.5
       bg-gray-300/50 py-1 px-0.5 rounded-md shadow text-gray-700 text-[8px] font-bold"
@@ -73,7 +90,7 @@ export default function HUD({
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
             <button
               onClick={onAdjustConfirm}
-              disabled={saving} 
+              disabled={saving}
               className="px-6 py-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl shadow-md"
             >
               위치 확정
