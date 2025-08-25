@@ -20,38 +20,36 @@ export default function HUD({
   onCancelInput,
   onSubmitInput,
   onAdjustConfirm,
+  onToggleMode,
 }) {
   return (
     <>
       {/* 검색 */}
       <SearchBar ref={inputRef} onSearch={onSearch} />
 
-      {/* 상태/에러 배지 */}
+      {/* 상태/에러 배지 + 모드 토글 버튼 */}
       <div className="absolute top-2.5 left-2.5 right-2.5 z-20 h-7 pointer-events-none">
-        <div
-          className={`absolute -bottom-11 right-3 
-    ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"} 
-    px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
+        <button
+          type="button"
+          onClick={onToggleMode}
+          className={`absolute -bottom-11 right-3 pointer-events-auto
+            ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"}
+            px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
+          aria-label={
+            viewMode === "individual" ? "모아 보기 모드로 전환" : "개인 글 모드로 전환"
+          }
+          title={viewMode === "individual" ? "모아 보기 모드로 전환" : "개인 글 모드로 전환"}
         >
-          {viewMode === "individual" ? "📌 개별 마커 모드" : "🗨️ 대표 마커 모드"}
-
-        </div>
-        <div
-          className="absolute -bottom-[66px] right-2.5
-      bg-gray-300/50 py-1 px-0.5 rounded-md shadow text-gray-700 text-[8px] font-bold"
-        >
-          * 확대/축소하여 모드를 변경하세요.
-        </div>
+          {viewMode === "individual" ? "📌 개인 글 모드" : "🌐 모아 보기 모드"}
+        </button>
       </div>
 
+      {/* 에러 배너 */}
       {error && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">
           {error}
           {onClearError && (
-            <button
-              className="ml-2 underline"
-              onClick={onClearError}
-            >
+            <button className="ml-2 underline" onClick={onClearError}>
               닫기
             </button>
           )}
@@ -63,7 +61,7 @@ export default function HUD({
         <InputSignBoard onSubmit={onSubmitInput} onCancel={onCancelInput} />
       )}
 
-      {/* 조준선 + 위치 확정 */}
+      {/* 조준선 + 위치 확정 버튼 */}
       {viewMode === "individual" && subMode === "adjust" && (
         <>
           <div className="pointer-events-none absolute inset-0 z-20">
@@ -73,8 +71,8 @@ export default function HUD({
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
             <button
               onClick={onAdjustConfirm}
-              disabled={saving} 
-              className="px-6 py-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl shadow-md"
+              disabled={saving}
+              className="px-6 py-2 bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl shadow-md"
             >
               위치 확정
             </button>
@@ -82,7 +80,7 @@ export default function HUD({
         </>
       )}
 
-      {/* 신고 버튼 */}
+      {/* 신고 버튼 (기본 상태) */}
       {viewMode === "individual" && subMode === "default" && (
         <TrafficButton onClick={onOpenInput} />
       )}

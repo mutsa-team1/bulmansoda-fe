@@ -71,7 +71,21 @@ export default function MapPage() {
       setSubMode("default");
     }
   }, [viewMode, subMode]);
-
+  const toggleMode = () => {
+    if (!mapRef.current) return;
+  
+    // 개인 글 모드(레벨 1~3) → 모아 보기 모드(레벨 7)
+    // 모아 보기 모드(레벨 4~) → 개인 글 모드(레벨 3)
+    const targetLevel = viewMode === "individual" ? 7 : 3;
+  
+    // Kakao Maps v3: setLevel(level, { animate, anchor })
+    try {
+      mapRef.current.setLevel(targetLevel, { animate: true });
+    } catch {
+      // 혹시 옵션 미지원 버전 대비
+      mapRef.current.setLevel(targetLevel);
+    }
+  };
   // 데이터 불러오기
   const loadMarkers = async () => {
     const bounds = { minLat: 33.0, maxLat: 39.0, minLng: 124.0, maxLng: 132.0 };
@@ -227,6 +241,7 @@ export default function MapPage() {
         }}
         onSubmitInput={handleInputComplete}
         onAdjustConfirm={handleAdjustComplete}
+        onToggleMode={toggleMode}
       />
 
       {/* 지도 */}
