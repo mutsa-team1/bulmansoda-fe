@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Logo from "../assets/logo.svg";
-import LoginButton from "../assets/loginbutton.svg";
-
+import LoginButton from "../assets/new-loginbutton.svg";
+import { createUser } from "../api/user"; // ✅ 유저 생성 API 불러오기
 
 export default function LoginPage({ onSuccess }) {
   const [name, setName] = useState("");
@@ -11,7 +11,7 @@ export default function LoginPage({ onSuccess }) {
   // 간단한 휴대폰 번호(숫자만) 검사
   const validPhone = (v) => /^01[016789]\d{7,8}$/.test(v.replaceAll("-", ""));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -23,11 +23,22 @@ export default function LoginPage({ onSuccess }) {
       return;
     }
 
-    // 아주 단순한 로그인 처리(실서비스에선 API 호출/토큰 필요)
-    const profile = { name: name.trim(), phone: phone.replaceAll("-", "") };
-    localStorage.setItem("bulmansoda_user", JSON.stringify(profile));
-    toast.success("로그인 완료!");
-    onSuccess?.(profile);
+    try {
+      // ✅ 서버에 POST 요청
+      const userId = await createUser({
+        name: name.trim(),
+        phoneNumber: phone.replaceAll("-", ""),
+      });
+
+      toast.success("로그인 완료!");
+      const profile = { id: userId, name: name.trim(), phone: phone.replaceAll("-", "") };
+
+      localStorage.setItem("bulmansoda_user", JSON.stringify(profile)); // 새로고침 후에도 유지
+      onSuccess?.(profile); // 부모 컴포넌트에 전달
+    } catch (err) {
+      console.error(err);
+      toast.error("로그인 실패: 서버와 통신할 수 없습니다.");
+    }
   };
 
   // Enter로 제출
@@ -72,12 +83,12 @@ export default function LoginPage({ onSuccess }) {
             onChange={(e) => setPhone(e.target.value)}
           />
           <button type="submit" className="w-full">
-    <img
-      src={LoginButton}
-      alt="로그인 버튼"
-      className="mx-auto w-full h-auto"
-    />
-  </button>
+            <img
+              src={LoginButton}
+              alt="로그인 버튼"
+              className="mx-auto w-full h-auto"
+            />
+          </button>
         </form>
       </div>
     </div>

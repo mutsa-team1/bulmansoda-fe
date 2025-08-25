@@ -37,12 +37,11 @@ export default function HUD({
     px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
         >
           {viewMode === "individual" ? "📌 개별 마커 모드" : "🗨️ 대표 마커 모드"}
-
         </button> */}
         <button
           type="button"
           onClick={onToggleMode}
-          className={`absolute -bottom-11 right-3 pointer-events-auto
+          className={`absolute -bottom-11 right-3 pointer-events-auto shadow-md
             ${viewMode === "individual" ? "bg-red-300/95" : "bg-red-300/95"}
             px-3 py-1.5 rounded-lg shadow-md text-gray-800 text-xs font-bold`}
           aria-label={

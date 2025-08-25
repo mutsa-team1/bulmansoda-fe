@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 export default function App() {
   const [user, setUser] = useState(null);
 
+  // 앱 시작 시 localStorage 에 저장된 유저 불러오기
   useEffect(() => {
     const raw = localStorage.getItem("bulmansoda_user");
     if (raw) {
@@ -30,7 +31,7 @@ export default function App() {
           {/* <div className="absolute right-3 top-3 z-50 text-sm bg-white/90 px-3 py-1 rounded-full shadow">
             {user.name} · <button onClick={handleLogout}>로그아웃</button>
           </div> */}
-          <MapPage />
+          <MapPage userId={user.id} onLoginSuccess={setUser} />
         </div>
       ) : (
         <LoginPage onSuccess={(u) => setUser(u)} />
