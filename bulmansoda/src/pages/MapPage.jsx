@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect,  useRef, useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 
 import { fetchCenterMarkers, fetchMarkers } from "../api/map";
@@ -11,6 +11,7 @@ import CommunityPanel from "../features/map/CommunityPanel";
 import useGeolocation from "../hooks/useGeolocation";
 
 import pinIcon from "../assets/pin.svg";
+import LoginPage from "./LoginPage"; // ✅ 로그인 페이지 import
 
 // ✅ 픽셀 단위로 지도 중심 이동
 const shiftPositionByPixels = (map, lat, lng, dyPx) => {
@@ -22,8 +23,8 @@ const shiftPositionByPixels = (map, lat, lng, dyPx) => {
   return { lat: newLatLng.getLat(), lng: newLatLng.getLng() };
 };
 
-export default function MapPage() {
-  const dummy_id = Number(import.meta.env.VITE_DUMMY_UID);
+export default function MapPage({ userId, onLoginSuccess }) {
+  console.log(userId);
 
   // 지도 상태
   const [center, setCenter] = useState({
@@ -80,18 +81,13 @@ export default function MapPage() {
       setSubMode("default");
     }
   }, [viewMode, subMode]);
+
   const toggleMode = () => {
     if (!mapRef.current) return;
-
-    // 개인 글 모드(레벨 1~3) → 모아 보기 모드(레벨 7)
-    // 모아 보기 모드(레벨 4~) → 개인 글 모드(레벨 3)
     const targetLevel = viewMode === "individual" ? 7 : 3;
-
-    // Kakao Maps v3: setLevel(level, { animate, anchor })
     try {
       mapRef.current.setLevel(targetLevel, { animate: true });
     } catch {
-      // 혹시 옵션 미지원 버전 대비
       mapRef.current.setLevel(targetLevel);
     }
   };
@@ -153,14 +149,14 @@ export default function MapPage() {
       const markerId = await createMarker({
         latitude: targetPos.lat,
         longitude: targetPos.lng,
-        userId: dummy_id,
+        userId: userId, // ✅ props로 받은 userId 사용
         content: inputText,
       });
       setPins((prev) => [
         ...prev,
         {
           markerId,
-          userId: dummy_id,
+          userId: userId,
           latitude: targetPos.lat,
           longitude: targetPos.lng,
           content: inputText,
@@ -222,6 +218,10 @@ export default function MapPage() {
     setPendingPos(null);
     setInputText("");
   };
+  // ✅ 로그인 안 된 경우 → LoginPage 렌더링
+  if (!userId) {
+    return <LoginPage onSuccess={onLoginSuccess} />;
+  }
 
   return (
     <div className="relative w-full h-[100dvh]">
@@ -257,7 +257,7 @@ export default function MapPage() {
         }}
         onSubmitInput={handleInputComplete}
         onAdjustConfirm={handleAdjustComplete}
-        onCancelAdjust={handleCancelAdjust}  // ✅ 전달
+        onCancelAdjust={handleCancelAdjust}
         onToggleMode={toggleMode}
       />
 
@@ -308,16 +308,16 @@ export default function MapPage() {
             pins={pins}
             center={center}
             inputText={inputText}
-            dummyId={dummy_id}
+            dummyId={userId}
             onDelete={removePin}
-            onCancelAdjust={handleCancelAdjust}  // ✅ SmallSignBoard까지 전달
+            onCancelAdjust={handleCancelAdjust}
           />
         ) : (
           <GroupMarkersLayer
             viewMode={viewMode}
             subMode={subMode}
             centers={centerMarkers}
-            dummyId={dummy_id}
+            dummyId={userId}
             onOpenCommunity={openCommunity}
           />
         )}
@@ -329,7 +329,7 @@ export default function MapPage() {
         onClose={closeCommunity}
         selectedBoard={selectedBoard}
         selectedCenter={selectedCenter}
-        dummyId={dummy_id}
+        dummyId={userId}
       />
     </div>
   );
