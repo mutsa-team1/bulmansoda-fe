@@ -12,7 +12,7 @@ import useGeolocation from "../hooks/useGeolocation";
 
 import pinIcon from "../assets/pin.svg";
 
-// ✅ 픽셀 단위로 지도 중심 이동 (lat/lng → px 이동 → lat/lng)
+// ✅ 픽셀 단위로 지도 중심 이동
 const shiftPositionByPixels = (map, lat, lng, dyPx) => {
   if (!map || !window.kakao?.maps) return { lat, lng };
   const proj = map.getProjection();
@@ -33,7 +33,7 @@ export default function MapPage() {
   const [level, setLevel] = useState(3);
   const viewMode = level < 4 ? "individual" : "group";
 
-  // 모드: default → pending(좌표선택) → input(텍스트작성) → adjust(등록)
+  // 모드
   const [subMode, setSubMode] = useState("default");
   const [pendingPos, setPendingPos] = useState(null);
 
@@ -120,7 +120,7 @@ export default function MapPage() {
   const handleInputComplete = (text) => {
     setInputText(text);
     if (pendingPos) {
-      setCenter(pendingPos); // adjust 시작 시 center를 선택 좌표로 이동
+      setCenter(pendingPos);
     }
     setSubMode("adjust");
   };
@@ -201,6 +201,13 @@ export default function MapPage() {
     });
   };
 
+  // ✅ adjust 취소 핸들러
+  const handleCancelAdjust = () => {
+    setSubMode("default");
+    setPendingPos(null);
+    setInputText("");
+  };
+
   return (
     <div className="relative w-full h-[100dvh]">
       {/* pending 안내 */}
@@ -221,6 +228,7 @@ export default function MapPage() {
         subMode={subMode}
         pinsCount={pins.length}
         error={error}
+        saving={saving}
         onClearError={() => setError(null)}
         onOpenInput={() => {
           setSubMode("pending");
@@ -234,6 +242,7 @@ export default function MapPage() {
         }}
         onSubmitInput={handleInputComplete}
         onAdjustConfirm={handleAdjustComplete}
+        onCancelAdjust={handleCancelAdjust}  // ✅ 전달
       />
 
       {/* 지도 */}
@@ -262,7 +271,7 @@ export default function MapPage() {
           }
         }}
       >
-        {/* 선택한 핀: adjust 모드 제외 */}
+        {/* 선택한 핀 */}
         {pendingPos && subMode !== "adjust" && (
           <MapMarker
             position={pendingPos}
@@ -285,6 +294,7 @@ export default function MapPage() {
             inputText={inputText}
             dummyId={dummy_id}
             onDelete={removePin}
+            onCancelAdjust={handleCancelAdjust}  // ✅ SmallSignBoard까지 전달
           />
         ) : (
           <GroupMarkersLayer
@@ -296,7 +306,6 @@ export default function MapPage() {
           />
         )}
       </Map>
-
 
       {/* 커뮤니티 패널 */}
       <CommunityPanel

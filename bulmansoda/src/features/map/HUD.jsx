@@ -81,7 +81,6 @@ export default function HUD({
           </div>
         </>
       )}
-
       {/* 신고 버튼 */}
       {viewMode === "individual" && subMode === "default" && (
         <TrafficButton onClick={onOpenInput} />
