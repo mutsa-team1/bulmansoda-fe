@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import Logo from "../assets/logo.svg";
+import Logo from "../assets/new-logo.svg";
 import LoginButton from "../assets/new-loginbutton.svg";
 import { createUser } from "../api/user"; // ✅ 유저 생성 API 불러오기
 
