@@ -23,7 +23,7 @@ const shiftPositionByPixels = (map, lat, lng, dyPx) => {
 };
 
 export default function MapPage({ userId, onLoginSuccess }) {
-  console.log(userId);
+  // console.log(userId);
 
   // 지도 상태
   const [center, setCenter] = useState({
